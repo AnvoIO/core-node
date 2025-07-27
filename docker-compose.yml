@@ -9,6 +9,7 @@ services:
       nodeos
       --config-dir /opt/eosio/config
       --data-dir /opt/eosio/data
+      --chain-id 38b1d7815474d0c60683ecbea321d723e83f5da6ae5f1c1f9fecc69d9ba96465
       --http-server-address=0.0.0.0:9888
       --p2p-listen-endpoint=0.0.0.0:9876
       --p2p-peer-address=p2p.libre.iad.cryptobloks.io:9876
@@ -42,6 +43,7 @@ services:
       nodeos
       --config-dir /opt/eosio/config
       --data-dir /opt/eosio/data
+      --chain-id b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee
       --http-server-address=0.0.0.0:9889
       --p2p-listen-endpoint=0.0.0.0:9877
       --p2p-peer-address=p2p.testnet.libre.iad.cryptobloks.io:9876
