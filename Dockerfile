@@ -2,7 +2,7 @@
 # Based on AntelopeIO Leap v5.0.3
 # Built for x86_64/amd64 platform
 
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM ubuntu:22.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
