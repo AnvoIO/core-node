@@ -25,6 +25,8 @@ RUN wget -O /tmp/leap.deb https://github.com/AntelopeIO/leap/releases/download/v
 # Create eosio user and directories
 RUN useradd -m -s /bin/bash eosio \
     && mkdir -p /opt/eosio/{config,data,logs} \
+    && mkdir -p /opt/eosio/data/state \
+    && mkdir -p /opt/eosio/config/protocol_features \
     && chown -R eosio:eosio /opt/eosio
 
 # Switch to eosio user
