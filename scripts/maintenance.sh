@@ -16,6 +16,9 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Source configuration utilities
+source "$SCRIPT_DIR/config-utils.sh"
+
 # Network options
 NETWORKS=("mainnet" "testnet")
 
@@ -47,22 +50,7 @@ is_valid_network() {
     return 1
 }
 
-# Function to get container name for network
-get_container_name() {
-    local network=$1
-    case $network in
-        "mainnet")
-            echo "libre-mainnet-api"
-            ;;
-        "testnet")
-            echo "libre-testnet-api"
-            ;;
-        *)
-            error "Invalid network: $network"
-            exit 1
-            ;;
-    esac
-}
+# Container name function is now provided by config-utils.sh
 
 # Function to check if container is running
 is_container_running() {
@@ -86,17 +74,8 @@ get_current_block() {
         return 1
     fi
     
-    local port
-    case $network in
-        "mainnet")
-            port=9888
-            ;;
-        "testnet")
-            port=9889
-            ;;
-    esac
-    
-    local response=$(curl -s "http://localhost:$port/v1/chain/get_info" 2>/dev/null || echo "")
+    local http_url=$(get_http_url "$network")
+    local response=$(curl -s "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
     if [[ -n "$response" ]]; then
         echo "$response" | grep -o '"head_block_num":[0-9]*' | cut -d':' -f2
     else
@@ -114,17 +93,8 @@ get_head_block_id() {
         return 1
     fi
     
-    local port
-    case $network in
-        "mainnet")
-            port=9888
-            ;;
-        "testnet")
-            port=9889
-            ;;
-    esac
-    
-    local response=$(curl -s "http://localhost:$port/v1/chain/get_info" 2>/dev/null || echo "")
+    local http_url=$(get_http_url "$network")
+    local response=$(curl -s "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
     if [[ -n "$response" ]]; then
         echo "$response" | grep -o '"head_block_id":"[^"]*"' | cut -d'"' -f4
     else
@@ -149,20 +119,12 @@ check_node_health() {
         return 1
     fi
     
-    local port
-    case $network in
-        "mainnet")
-            port=9888
-            ;;
-        "testnet")
-            port=9889
-            ;;
-    esac
+    local http_url=$(get_http_url "$network")
     
     # Check if API is responding
-    local response=$(curl -s "http://localhost:$port/v1/chain/get_info" 2>/dev/null || echo "")
+    local response=$(curl -s "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
     if [[ -z "$response" ]]; then
-        error "API endpoint not responding on port $port"
+        error "API endpoint not responding at $http_url"
         return 1
     fi
     
@@ -453,13 +415,14 @@ create_snapshot() {
     
     # Create snapshot using cleos
     info "Creating snapshot..."
-    docker exec $container cleos --url http://localhost:9888 snapshot create "$snapshot_file"
+    local http_url=$(get_http_url "$network")
+    docker exec $container cleos --url "$http_url" snapshot create "$snapshot_file"
     
     if [[ $? -eq 0 ]]; then
         log "Snapshot created successfully: $snapshot_file"
         
         # Get snapshot info
-        local snapshot_info=$(docker exec $container cleos --url http://localhost:9888 snapshot info "$snapshot_file" 2>/dev/null || echo "")
+        local snapshot_info=$(docker exec $container cleos --url "$http_url" snapshot info "$snapshot_file" 2>/dev/null || echo "")
         if [[ -n "$snapshot_info" ]]; then
             info "Snapshot info:"
             echo "$snapshot_info"

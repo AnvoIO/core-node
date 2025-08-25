@@ -10,7 +10,7 @@ The Libre node setup has been updated to eliminate redundant configuration setti
 
 ### Before (Redundant Configuration)
 
-- Settings were duplicated between `docker-compose.yml` and `config.ini`
+- Settings were duplicated between `docker/docker-compose.yml` and `config.ini`
 - Users had to edit multiple files to change configuration
 - No validation or backup system
 - Manual configuration process
@@ -111,7 +111,7 @@ The Libre node setup has been updated to eliminate redundant configuration setti
 
 ### Docker Compose
 
-- **File:** `docker-compose.yml`
+- **File:** `docker/docker-compose.yml`
 - **Purpose:** Container management only
 - **Contains:** Port mappings, volumes, networks
 
@@ -233,7 +233,7 @@ cp mainnet/config/config.ini mainnet/config/config.ini.backup
 cp testnet/config/config.ini testnet/config/config.ini.backup
 
 # Backup docker-compose
-cp docker-compose.yml docker-compose.yml.backup
+cp docker/docker-compose.yml docker/docker-compose.yml.backup
 ```
 
 ### Restore from Backup
@@ -246,7 +246,7 @@ cp mainnet/config/config.ini.backup.20241201_143022 mainnet/config/config.ini
 cp testnet/config/config.ini.backup.20241201_143022 testnet/config/config.ini
 
 # Restore docker-compose
-cp docker-compose.yml.backup.20241201_143022 docker-compose.yml
+cp docker/docker-compose.yml.backup.20241201_143022 docker/docker-compose.yml
 ```
 
 ## Use Cases
@@ -393,7 +393,7 @@ If you have an existing setup:
    ```bash
    cp mainnet/config/config.ini mainnet/config/config.ini.old
    cp testnet/config/config.ini testnet/config/config.ini.old
-   cp docker-compose.yml docker-compose.yml.old
+   cp docker/docker-compose.yml docker/docker-compose.yml.old
    ```
 
 2. **Run Deployment Script**

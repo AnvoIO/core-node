@@ -63,7 +63,7 @@ print_status "Libre Node Database Reset Script"
 echo
 
 # Check if running in the correct directory
-if [ ! -f "docker-compose.yml" ]; then
+if [ ! -f "docker/docker-compose.yml" ]; then
     print_error "Please run this script from the libre-node directory"
     exit 1
 fi

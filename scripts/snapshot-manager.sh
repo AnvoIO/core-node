@@ -16,6 +16,9 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Source configuration utilities
+source "$SCRIPT_DIR/config-utils.sh"
+
 # Network options
 NETWORKS=("mainnet" "testnet")
 
@@ -47,22 +50,7 @@ is_valid_network() {
     return 1
 }
 
-# Function to get container name for network
-get_container_name() {
-    local network=$1
-    case $network in
-        "mainnet")
-            echo "libre-mainnet-api"
-            ;;
-        "testnet")
-            echo "libre-testnet-api"
-            ;;
-        *)
-            error "Invalid network: $network"
-            exit 1
-            ;;
-    esac
-}
+# Container name function is now provided by config-utils.sh
 
 # Function to check if container is running
 is_container_running() {
@@ -73,18 +61,9 @@ is_container_running() {
 # Function to get current block number
 get_current_block() {
     local network=$1
-    local port
+    local http_url=$(get_http_url "$network")
     
-    case $network in
-        "mainnet")
-            port=9888
-            ;;
-        "testnet")
-            port=9889
-            ;;
-    esac
-    
-    local response=$(curl -s "http://localhost:$port/v1/chain/get_info" 2>/dev/null || echo "")
+    local response=$(curl -s "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
     if [[ -n "$response" ]]; then
         echo "$response" | grep -o '"head_block_num":[0-9]*' | cut -d':' -f2
     else
@@ -114,13 +93,14 @@ create_snapshot() {
     
     # Create snapshot using cleos
     info "Creating snapshot at block $current_block..."
-    local result=$(docker exec $container cleos --url http://localhost:9888 snapshot create "$snapshot_file" 2>&1)
+    local http_url=$(get_http_url "$network")
+    local result=$(docker exec $container cleos --url "$http_url" snapshot create "$snapshot_file" 2>&1)
     
     if [[ $? -eq 0 ]]; then
         log "Snapshot created successfully: $snapshot_file"
         
         # Get snapshot info
-        local snapshot_info=$(docker exec $container cleos --url http://localhost:9888 snapshot info "$snapshot_file" 2>/dev/null || echo "")
+        local snapshot_info=$(docker exec $container cleos --url "$http_url" snapshot info "$snapshot_file" 2>/dev/null || echo "")
         if [[ -n "$snapshot_info" ]]; then
             info "Snapshot info:"
             echo "$snapshot_info"
@@ -353,7 +333,8 @@ restore_from_snapshot() {
         while [[ $attempt -lt $max_attempts ]]; do
             if is_container_running $container; then
                 sleep 2
-                local response=$(curl -s "http://localhost:9888/v1/chain/get_info" 2>/dev/null || echo "")
+                local http_url=$(get_http_url "$network")
+                local response=$(curl -s "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
                 if [[ -n "$response" ]]; then
                     log "Node is back online after snapshot restoration"
                     return 0

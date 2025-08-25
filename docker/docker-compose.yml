@@ -1,0 +1,28 @@
+services:
+  libre-mainnet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: libre-node:5.0.3
+    container_name: libre-mainnet-api
+    command: nodeos
+    volumes:
+      - ./mainnet/config:/opt/eosio/config
+      - ./mainnet/data:/opt/eosio/data
+      - ./mainnet/logs:/opt/eosio/logs
+    network_mode: host
+    restart: unless-stopped
+
+  libre-testnet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: libre-node:5.0.3
+    container_name: libre-testnet-api
+    command: nodeos
+    volumes:
+      - ./mainnet/config:/opt/eosio/config
+      - ./mainnet/data:/opt/eosio/data
+      - ./mainnet/logs:/opt/eosio/logs
+    network_mode: host
+    restart: unless-stopped

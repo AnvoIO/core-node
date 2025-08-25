@@ -25,11 +25,11 @@ fi
 case $NETWORK in
     mainnet)
         echo "=== Libre Mainnet Logs ==="
-        docker-compose logs $FOLLOW_FLAG libre-mainnet
+        docker-compose -f docker/docker-compose.yml logs $FOLLOW_FLAG libre-mainnet
         ;;
     testnet)
         echo "=== Libre Testnet Logs ==="
-        docker-compose logs $FOLLOW_FLAG libre-testnet
+        docker-compose -f docker/docker-compose.yml logs $FOLLOW_FLAG libre-testnet
         ;;
     *)
         echo "Error: Invalid network. Use 'mainnet' or 'testnet'"

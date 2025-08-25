@@ -62,17 +62,27 @@ If you prefer to set up manually:
 1. **Build the Docker image:**
 
    ```bash
-   ./build.sh
+   ./docker/build.sh
    ```
 
 2. **Start the nodes:**
 
    ```bash
-   docker-compose up -d
+   # Using the convenience script (recommended)
+   ./docker-compose.sh up -d
+
+   # Or directly with docker-compose
+   docker-compose -f docker/docker-compose.yml up -d
    ```
 
 3. **View logs:**
+
    ```bash
+   # Using convenience script
+   ./docker-compose.sh logs -f libre-mainnet    # Mainnet logs
+   ./docker-compose.sh logs -f libre-testnet    # Testnet logs
+
+   # Or using management scripts
    ./scripts/logs.sh mainnet    # Mainnet logs
    ./scripts/logs.sh testnet    # Testnet logs
    ```
@@ -311,12 +321,24 @@ The `docker-compose.yml` file manages container configuration only.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[docs/README.md](docs/README.md)** - Documentation index and overview
+- **[docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment and configuration guide
+- **[docs/SCRIPT_UPDATES.md](docs/SCRIPT_UPDATES.md)** - Documentation of script updates and improvements
+- **[docs/DEFAULT_VALUES.md](docs/DEFAULT_VALUES.md)** - Reference for all default configuration values
+- **[docs/api/](docs/api/)** - API documentation and examples
+- **[docs/troubleshooting/](docs/troubleshooting/)** - Troubleshooting guide and common issues
+- **[docs/examples/](docs/examples/)** - Example scripts and configurations
+
 ## Support
 
 For issues and questions:
 
-- Check the troubleshooting section
-- Review Libre blockchain documentation
+- Check the [troubleshooting guide](docs/troubleshooting/README.md)
+- Review [Libre blockchain documentation](https://libre.org/)
 - Open an issue on GitHub
 
 ## Changelog

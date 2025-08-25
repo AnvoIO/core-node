@@ -15,9 +15,10 @@ NC='\033[0m' # No Color
 # Configuration files
 MAINNET_CONFIG="mainnet/config/config.ini"
 TESTNET_CONFIG="testnet/config/config.ini"
-DOCKER_COMPOSE="docker-compose.yml"
+DOCKER_COMPOSE="docker/docker-compose.yml"
 
 # Default values
+DEFAULT_LISTEN_IP="0.0.0.0"
 DEFAULT_MAINNET_HTTP_PORT="9888"
 DEFAULT_MAINNET_P2P_PORT="9876"
 DEFAULT_MAINNET_STATE_HISTORY_PORT="9080"
@@ -300,7 +301,7 @@ main() {
     # Get mainnet configuration
     print_header "Mainnet Network Configuration"
     
-    mainnet_listen_ip=$(get_input "Enter mainnet listen IP address" "0.0.0.0" "validate_ip")
+    mainnet_listen_ip=$(get_input "Enter mainnet listen IP address" "$DEFAULT_LISTEN_IP" "validate_ip")
     mainnet_http_port=$(get_input "Enter mainnet HTTP port" "$DEFAULT_MAINNET_HTTP_PORT" "validate_port")
     mainnet_p2p_port=$(get_input "Enter mainnet P2P port" "$DEFAULT_MAINNET_P2P_PORT" "validate_port")
     mainnet_state_history_port=$(get_input "Enter mainnet state history port" "$DEFAULT_MAINNET_STATE_HISTORY_PORT" "validate_port")
@@ -334,7 +335,7 @@ main() {
     # Get testnet configuration
     print_header "Testnet Network Configuration"
     
-    testnet_listen_ip=$(get_input "Enter testnet listen IP address" "0.0.0.0" "validate_ip")
+    testnet_listen_ip=$(get_input "Enter testnet listen IP address" "$DEFAULT_LISTEN_IP" "validate_ip")
     testnet_http_port=$(get_input "Enter testnet HTTP port" "$DEFAULT_TESTNET_HTTP_PORT" "validate_port")
     testnet_p2p_port=$(get_input "Enter testnet P2P port" "$DEFAULT_TESTNET_P2P_PORT" "validate_port")
     testnet_state_history_port=$(get_input "Enter testnet state history port" "$DEFAULT_TESTNET_STATE_HISTORY_PORT" "validate_port")
@@ -469,13 +470,13 @@ main() {
     print_status "Backup files have been created with timestamps."
     echo
     print_status "To start the nodes, run:"
-    echo "  docker-compose up -d"
+    echo "  docker-compose -f docker/docker-compose.yml up -d"
     echo
     print_status "To view logs, run:"
-    echo "  docker-compose logs -f"
+    echo "  docker-compose -f docker/docker-compose.yml logs -f"
     echo
     print_status "To stop the nodes, run:"
-    echo "  docker-compose down"
+    echo "  docker-compose -f docker/docker-compose.yml down"
     echo
     print_status "For monitoring and maintenance, see the scripts/ directory."
 }

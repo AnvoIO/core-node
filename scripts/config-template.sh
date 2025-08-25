@@ -203,7 +203,7 @@ main() {
     print_header "Configuration File Locations"
     echo "Mainnet: mainnet/config/config.ini"
     echo "Testnet:  testnet/config/config.ini"
-    echo "Docker:   docker-compose.yml"
+    echo "Docker:   docker/docker-compose.yml"
     echo
     
     print_status "Use the deploy.sh script to configure these settings interactively."

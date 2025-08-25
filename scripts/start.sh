@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Source configuration utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config-utils.sh"
+
 echo "Starting Libre Blockchain nodes..."
 
 # Check if permissions are set up correctly
@@ -11,24 +16,31 @@ fi
 # Check if Docker image exists, build if not
 if ! docker images | grep -q "libre-node.*5.0.3"; then
     echo "Docker image not found. Building..."
-    ../build.sh
+    ../docker/build.sh
 fi
 
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 echo "Waiting for nodes to start..."
 sleep 15
 echo "Libre nodes status:"
-docker-compose ps
+docker-compose -f docker/docker-compose.yml ps
 echo ""
-echo "Libre Mainnet API: http://localhost:9888"
-echo "Libre Testnet API: http://localhost:9889"
+
+# Get current configuration
+mainnet_http_url=$(get_http_url "mainnet")
+testnet_http_url=$(get_http_url "testnet")
+mainnet_ws_url=$(get_ws_url "mainnet")
+testnet_ws_url=$(get_ws_url "testnet")
+
+echo "Libre Mainnet API: $mainnet_http_url"
+echo "Libre Testnet API: $testnet_http_url"
 echo ""
 echo "State History Endpoints:"
-echo "Libre Mainnet SHiP: ws://localhost:9080"
-echo "Libre Testnet SHiP: ws://localhost:9081"
+echo "Libre Mainnet SHiP: $mainnet_ws_url"
+echo "Libre Testnet SHiP: $testnet_ws_url"
 echo ""
 echo "To check node info:"
-echo "curl http://localhost:9888/v1/chain/get_info  # Mainnet"
-echo "curl http://localhost:9889/v1/chain/get_info  # Testnet"
+echo "curl $mainnet_http_url/v1/chain/get_info  # Mainnet"
+echo "curl $testnet_http_url/v1/chain/get_info  # Testnet"
 echo ""
 echo "Note: Initial sync may take time depending on network connectivity"

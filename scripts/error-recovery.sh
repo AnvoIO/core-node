@@ -16,6 +16,9 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Source configuration utilities
+source "$SCRIPT_DIR/config-utils.sh"
+
 # Network options
 NETWORKS=("mainnet" "testnet")
 
@@ -47,22 +50,7 @@ is_valid_network() {
     return 1
 }
 
-# Function to get container name for network
-get_container_name() {
-    local network=$1
-    case $network in
-        "mainnet")
-            echo "libre-mainnet-api"
-            ;;
-        "testnet")
-            echo "libre-testnet-api"
-            ;;
-        *)
-            error "Invalid network: $network"
-            exit 1
-            ;;
-    esac
-}
+# Container name function is now provided by config-utils.sh
 
 # Function to check if container is running
 is_container_running() {
@@ -115,18 +103,9 @@ check_memory_usage() {
 # Function to check API connectivity
 check_api_connectivity() {
     local network=$1
-    local port
+    local http_url=$(get_http_url "$network")
     
-    case $network in
-        "mainnet")
-            port=9888
-            ;;
-        "testnet")
-            port=9889
-            ;;
-    esac
-    
-    local response=$(curl -s --max-time 10 "http://localhost:$port/v1/chain/get_info" 2>/dev/null || echo "")
+    local response=$(curl -s --max-time 10 "$http_url/v1/chain/get_info" 2>/dev/null || echo "")
     if [[ -n "$response" ]]; then
         local head_block=$(echo "$response" | grep -o '"head_block_num":[0-9]*' | cut -d':' -f2)
         local last_irreversible=$(echo "$response" | grep -o '"last_irreversible_block_num":[0-9]*' | cut -d':' -f2)
