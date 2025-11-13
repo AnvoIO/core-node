@@ -80,7 +80,11 @@ list_providers() {
         IFS='|' read -r name base_url path_pattern file_pattern compression <<< "$provider"
         local display_name=$(echo "$name" | sed 's/_MAINNET\|_TESTNET//')
         echo "$index) $display_name"
-        echo "   URL: $base_url$path_pattern"
+        if [ "$path_pattern" = "DIRECT" ]; then
+            echo "   URL: $base_url (direct download)"
+        else
+            echo "   URL: $base_url$path_pattern"
+        fi
         echo "   Format: $compression compressed"
         echo ""
         ((index++))
@@ -92,30 +96,38 @@ get_latest_snapshot() {
     local provider_info=$1
     IFS='|' read -r name base_url path_pattern file_pattern compression <<< "$provider_info"
     
-    local full_url="$base_url$path_pattern"
-    print_status "Fetching snapshot list from: $full_url"
-    
-    # Get the snapshot listing page and find matching files
-    local latest_snapshot=$(curl -s "$full_url/" | \
-        grep -oE 'href="[^"]*"' | \
-        sed 's/href="//;s/"//' | \
-        grep -E "$file_pattern" | \
-        sort -V | \
-        tail -1)
-    
-    if [ -z "$latest_snapshot" ]; then
-        print_error "No snapshots found matching pattern: $file_pattern"
-        return 1
+    # Check if this is a direct URL (EOSUSA style)
+    if [ "$path_pattern" = "DIRECT" ]; then
+        # Direct URL - no need to fetch listing
+        print_status "Using direct snapshot URL: $base_url"
+        echo "$base_url|$compression"
+    else
+        # Standard listing approach for other providers
+        local full_url="$base_url$path_pattern"
+        print_status "Fetching snapshot list from: $full_url"
+        
+        # Get the snapshot listing page and find matching files
+        local latest_snapshot=$(curl -s "$full_url/" | \
+            grep -oE 'href="[^"]*"' | \
+            sed 's/href="//;s/"//' | \
+            grep -E "$file_pattern" | \
+            sort -V | \
+            tail -1)
+        
+        if [ -z "$latest_snapshot" ]; then
+            print_error "No snapshots found matching pattern: $file_pattern"
+            return 1
+        fi
+        
+        echo "$full_url/$latest_snapshot|$compression"
     fi
-    
-    echo "$full_url/$latest_snapshot|$compression"
 }
 
 # Function to decompress snapshot
 decompress_snapshot() {
     local snapshot_file=$1
     local compression=$2
-    local output_file=$3
+    local output_dir=$3
     
     print_status "Decompressing $compression file..."
     
@@ -125,31 +137,52 @@ decompress_snapshot() {
                 print_error "zstd not found. Install with: apt-get install zstd"
                 return 1
             fi
-            zstd -d "$snapshot_file" -o "$output_file"
+            zstd -d "$snapshot_file" -o "$output_dir/snapshot.bin"
             ;;
         gz)
-            if ! command -v gzip &> /dev/null; then
-                print_error "gzip not found"
-                return 1
+            # Check if it's a tar.gz file
+            if [[ "$snapshot_file" == *.tar.gz ]]; then
+                print_status "Extracting tar.gz archive..."
+                if ! command -v tar &> /dev/null; then
+                    print_error "tar not found"
+                    return 1
+                fi
+                # Extract to output directory
+                tar -xzf "$snapshot_file" -C "$output_dir"
+                
+                # Find the snapshot.bin file in the extracted contents
+                local snapshot_bin=$(find "$output_dir" -name "*.bin" -o -name "snapshot.*" | head -1)
+                if [ -n "$snapshot_bin" ] && [ "$snapshot_bin" != "$output_dir/snapshot.bin" ]; then
+                    mv "$snapshot_bin" "$output_dir/snapshot.bin"
+                fi
+                
+                # Clean up any extra directories created by tar
+                find "$output_dir" -type d -empty -delete 2>/dev/null || true
+            else
+                # Plain gzip file
+                if ! command -v gzip &> /dev/null; then
+                    print_error "gzip not found"
+                    return 1
+                fi
+                gunzip -c "$snapshot_file" > "$output_dir/snapshot.bin"
             fi
-            gunzip -c "$snapshot_file" > "$output_file"
             ;;
         bz2)
             if ! command -v bzip2 &> /dev/null; then
                 print_error "bzip2 not found"
                 return 1
             fi
-            bunzip2 -c "$snapshot_file" > "$output_file"
+            bunzip2 -c "$snapshot_file" > "$output_dir/snapshot.bin"
             ;;
         xz)
             if ! command -v xz &> /dev/null; then
                 print_error "xz not found"
                 return 1
             fi
-            xz -dc "$snapshot_file" > "$output_file"
+            xz -dc "$snapshot_file" > "$output_dir/snapshot.bin"
             ;;
         none)
-            cp "$snapshot_file" "$output_file"
+            cp "$snapshot_file" "$output_dir/snapshot.bin"
             ;;
         *)
             print_error "Unsupported compression: $compression"
@@ -157,6 +190,13 @@ decompress_snapshot() {
             ;;
     esac
     
+    # Verify snapshot.bin exists
+    if [ ! -f "$output_dir/snapshot.bin" ]; then
+        print_error "Failed to extract snapshot.bin"
+        return 1
+    fi
+    
+    print_status "Snapshot extracted successfully"
     return 0
 }
 
@@ -222,8 +262,8 @@ download_snapshot() {
     # Create fresh data directory
     mkdir -p "$data_dir"
     
-    # Extract snapshot
-    if ! decompress_snapshot "$temp_dir/$snapshot_file" "$compression" "$data_dir/snapshot.bin"; then
+    # Extract snapshot (pass directory, not file path)
+    if ! decompress_snapshot "$temp_dir/$snapshot_file" "$compression" "$data_dir"; then
         print_error "Extraction failed"
         rm -rf "$temp_dir"
         return 1
