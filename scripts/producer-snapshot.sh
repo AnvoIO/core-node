@@ -99,12 +99,12 @@ get_latest_snapshot() {
     # Check if this is a direct URL (EOSUSA style)
     if [ "$path_pattern" = "DIRECT" ]; then
         # Direct URL - no need to fetch listing
-        print_status "Using direct snapshot URL: $base_url"
+        # Don't print status here as it interferes with the return value
         echo "$base_url|$compression"
     else
         # Standard listing approach for other providers
         local full_url="$base_url$path_pattern"
-        print_status "Fetching snapshot list from: $full_url"
+        # Don't print status here as it interferes with the return value
         
         # Get the snapshot listing page and find matching files
         local latest_snapshot=$(curl -s "$full_url/" | \
