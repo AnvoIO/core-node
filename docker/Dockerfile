@@ -62,11 +62,38 @@ if [ "$1" = "nodeos" ] && [ "$PRODUCER_MODE" = "true" ]; then\n\
     LATEST_SNAPSHOT=$(find /opt/eosio/data/snapshots -name "*.bin" -type f 2>/dev/null | sort -r | head -n 1)\n\
     if [ -n "$LATEST_SNAPSHOT" ]; then\n\
         echo "Using latest snapshot: $(basename "$LATEST_SNAPSHOT")"\n\
-        # Replace hardcoded snapshot path with latest one\n\
-        set -- "${@/--snapshot \/opt\/eosio\/data\/snapshot.bin/--snapshot $LATEST_SNAPSHOT}"\n\
+        # Rebuild args array with correct snapshot path\n\
+        NEW_ARGS=()\n\
+        SKIP_NEXT=false\n\
+        for arg in "$@"; do\n\
+            if [ "$SKIP_NEXT" = "true" ]; then\n\
+                NEW_ARGS+=("$LATEST_SNAPSHOT")\n\
+                SKIP_NEXT=false\n\
+            elif [ "$arg" = "--snapshot" ]; then\n\
+                NEW_ARGS+=("$arg")\n\
+                SKIP_NEXT=true\n\
+            else\n\
+                NEW_ARGS+=("$arg")\n\
+            fi\n\
+        done\n\
+        set -- "${NEW_ARGS[@]}"\n\
+    elif [ ! -f "/opt/eosio/data/snapshot.bin" ]; then\n\
+        echo "No snapshots found and no fallback snapshot.bin - starting without snapshot"\n\
+        # Remove snapshot arguments if no snapshot exists\n\
+        NEW_ARGS=()\n\
+        SKIP_NEXT=false\n\
+        for arg in "$@"; do\n\
+            if [ "$SKIP_NEXT" = "true" ]; then\n\
+                SKIP_NEXT=false\n\
+            elif [ "$arg" = "--snapshot" ]; then\n\
+                SKIP_NEXT=true\n\
+            else\n\
+                NEW_ARGS+=("$arg")\n\
+            fi\n\
+        done\n\
+        set -- "${NEW_ARGS[@]}"\n\
     else\n\
-        # Fall back to original snapshot.bin if no snapshots found\n\
-        echo "No snapshots found in snapshots directory, using snapshot.bin"\n\
+        echo "Using fallback snapshot: snapshot.bin"\n\
     fi\n\
 fi\n\
 \n\
