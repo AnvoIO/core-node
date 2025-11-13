@@ -14,7 +14,9 @@ NC='\033[0m' # No Color
 
 # Source configuration utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/config-utils.sh"
+if [ -f "$SCRIPT_DIR/config-utils.sh" ]; then
+    source "$SCRIPT_DIR/config-utils.sh"
+fi
 
 # Configuration files
 MAINNET_CONFIG="mainnet/config/config.ini"
@@ -37,6 +39,16 @@ print_header() {
     echo -e "${BLUE}================================${NC}"
     echo -e "${BLUE}$1${NC}"
     echo -e "${BLUE}================================${NC}"
+}
+
+# Function to create backup of config file
+create_backup() {
+    local file=$1
+    if [ -f "$file" ]; then
+        local backup_file="${file}.backup.$(date +%Y%m%d_%H%M%S)"
+        cp "$file" "$backup_file"
+        print_status "Backup created: $backup_file"
+    fi
 }
 
 # Function to validate producer name
