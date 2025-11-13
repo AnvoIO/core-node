@@ -159,6 +159,28 @@ configure_producer() {
         sed -i.bak "s/^#api-accept-transactions = true.*/api-accept-transactions = true/" "$config_file"
     fi
     
+    # Enable lightweight producer mode settings
+    print_status "Enabling lightweight producer mode..."
+    sed -i.bak 's/^#snapshot = \/opt\/eosio\/data\/snapshot\.bin/snapshot = \/opt\/eosio\/data\/snapshot.bin/' "$config_file"
+    sed -i.bak 's/^#blocks-log-stride = 1000/blocks-log-stride = 1000/' "$config_file"
+    sed -i.bak 's/^#max-retained-block-files = 1/max-retained-block-files = 1/' "$config_file"
+    sed -i.bak 's/^#blocks-retained-dir =/blocks-retained-dir =/' "$config_file"
+    sed -i.bak 's/^#chain-state-db-size-mb = 4096/chain-state-db-size-mb = 4096/' "$config_file"
+    sed -i.bak 's/^#reversible-blocks-db-size-mb = 340/reversible-blocks-db-size-mb = 340/' "$config_file"
+    sed -i.bak 's/^#read-mode = head/read-mode = head/' "$config_file"
+    sed -i.bak 's/^#validation-mode = light/validation-mode = light/' "$config_file"
+    sed -i.bak 's/^#database-map-mode = mapped/database-map-mode = mapped/' "$config_file"
+    
+    # Disable state history for lightweight mode
+    sed -i.bak 's/^plugin = eosio::state_history_plugin/#plugin = eosio::state_history_plugin  # Disabled for lightweight mode/' "$config_file"
+    sed -i.bak 's/^state-history-endpoint/#state-history-endpoint/' "$config_file"
+    sed -i.bak 's/^trace-history/#trace-history/' "$config_file"
+    sed -i.bak 's/^chain-state-history/#chain-state-history/' "$config_file"
+    sed -i.bak 's/^state-history-dir/#state-history-dir/' "$config_file"
+    
+    # Remove any existing private-key entries (cleanup from old versions)
+    sed -i.bak '/^private-key = /d' "$config_file"
+    
     # Enable other producer settings
     sed -i.bak 's/^#max-transaction-time = 30/max-transaction-time = 30/' "$config_file"
     sed -i.bak 's/^#max-irreversible-block-age = 10/max-irreversible-block-age = 10/' "$config_file"
