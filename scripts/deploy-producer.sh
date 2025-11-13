@@ -109,7 +109,7 @@ plugin = eosio::net_plugin
 chain-state-db-size-mb = 4096
 
 # Snapshot-based startup (lightweight mode)
-snapshot = /opt/eosio/data/snapshot.bin
+# Note: snapshot must be specified via command line, not config file
 
 # Minimal block retention (lightweight mode)
 blocks-log-stride = 1000
@@ -257,7 +257,7 @@ configure_producer() {
     
     # Enable lightweight producer mode settings
     print_status "Enabling lightweight producer mode..."
-    sed -i.bak 's/^#snapshot = \/opt\/eosio\/data\/snapshot\.bin/snapshot = \/opt\/eosio\/data\/snapshot.bin/' "$config_file"
+    # Note: snapshot is specified via command line in docker-compose, not config file
     sed -i.bak 's/^#blocks-log-stride = 1000/blocks-log-stride = 1000/' "$config_file"
     sed -i.bak 's/^#max-retained-block-files = 1/max-retained-block-files = 1/' "$config_file"
     sed -i.bak 's/^#blocks-retained-dir =/blocks-retained-dir =/' "$config_file"
