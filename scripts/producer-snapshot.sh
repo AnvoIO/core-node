@@ -224,7 +224,7 @@ download_snapshot() {
         selected_provider="${providers[0]}"
         if [ -z "$provider_choice" ]; then
             local provider_name=$(echo "$selected_provider" | cut -d'|' -f1 | sed 's/_MAINNET\|_TESTNET//')
-            print_status "Using default provider: $provider_name"
+            print_status "Using provider: $provider_name"
         fi
     fi
     
@@ -238,17 +238,45 @@ download_snapshot() {
     local snapshot_file=$(basename "$full_url")
     local temp_dir="/tmp/libre-snapshot-$network"
     
-    print_status "Downloading from: $full_url"
+    echo ""  # New line after previous output
+    print_status "Download URL: $full_url"
     print_warning "This may take several minutes depending on connection speed..."
     
     # Create temp directory
     mkdir -p "$temp_dir"
     
     # Download snapshot with progress
-    if ! wget -q --show-progress -O "$temp_dir/$snapshot_file" "$full_url"; then
-        print_error "Download failed"
-        rm -rf "$temp_dir"
-        return 1
+    print_status "Saving to: $temp_dir/$snapshot_file"
+    
+    # Try wget first with timeout and retries
+    if command -v wget &> /dev/null; then
+        print_status "Downloading with wget..."
+        if wget --timeout=30 --tries=3 --show-progress -O "$temp_dir/$snapshot_file" "$full_url" 2>&1; then
+            print_status "Download successful with wget"
+        else
+            print_warning "wget failed, trying curl..."
+            WGET_FAILED=1
+        fi
+    else
+        WGET_FAILED=1
+    fi
+    
+    # Try curl if wget failed or not available
+    if [ "${WGET_FAILED:-0}" = "1" ]; then
+        if command -v curl &> /dev/null; then
+            print_status "Downloading with curl..."
+            if curl -L --connect-timeout 30 --retry 3 --progress-bar -o "$temp_dir/$snapshot_file" "$full_url"; then
+                print_status "Download successful with curl"
+            else
+                print_error "Download failed with curl"
+                rm -rf "$temp_dir"
+                return 1
+            fi
+        else
+            print_error "Neither wget nor curl is available"
+            rm -rf "$temp_dir"
+            return 1
+        fi
     fi
     
     print_status "Download complete. Extracting snapshot..."
