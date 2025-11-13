@@ -114,7 +114,6 @@ chain-state-db-size-mb = 4096
 # Minimal block retention (lightweight mode)
 blocks-log-stride = 1000
 max-retained-block-files = 1
-blocks-retained-dir =
 
 # Fast sync options (lightweight mode)  
 read-mode = head
@@ -260,7 +259,6 @@ configure_producer() {
     # Note: snapshot is specified via command line in docker-compose, not config file
     sed -i.bak 's/^#blocks-log-stride = 1000/blocks-log-stride = 1000/' "$config_file"
     sed -i.bak 's/^#max-retained-block-files = 1/max-retained-block-files = 1/' "$config_file"
-    sed -i.bak 's/^#blocks-retained-dir =/blocks-retained-dir =/' "$config_file"
     sed -i.bak 's/^#chain-state-db-size-mb = 4096/chain-state-db-size-mb = 4096/' "$config_file"
     sed -i.bak 's/^#read-mode = head/read-mode = head/' "$config_file"
     sed -i.bak 's/^#validation-mode = light/validation-mode = light/' "$config_file"
