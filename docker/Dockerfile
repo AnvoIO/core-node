@@ -30,7 +30,7 @@ RUN useradd -m -s /bin/bash eosio \
     && chown -R eosio:eosio /opt/eosio
 
 # Copy snapshot management script to container
-COPY ../scripts/manage-snapshots.sh /usr/local/bin/manage-snapshots.sh
+COPY scripts/manage-snapshots.sh /usr/local/bin/manage-snapshots.sh
 RUN chmod +x /usr/local/bin/manage-snapshots.sh
 
 # Create entrypoint script to handle volume permissions and cron setup

@@ -4,8 +4,8 @@ services:
   # Lightweight Mainnet Producer Node
   libre-mainnet-producer:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     image: libre-node:5.0.3
     container_name: libre-mainnet-producer
     command: >
@@ -48,8 +48,8 @@ services:
   # Lightweight Testnet Producer Node
   libre-testnet-producer:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     image: libre-node:5.0.3
     container_name: libre-testnet-producer
     command: >
