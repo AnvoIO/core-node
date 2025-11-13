@@ -2,6 +2,13 @@
 
 This repository contains a Docker-based setup for running Libre blockchain nodes (mainnet and testnet) using AntelopeIO Leap v5.0.3.
 
+## 🚀 New in v2.0: Block Producer Support
+
+- **Full Producer Mode**: Configure nodes as block producers with security best practices
+- **Lightweight Producer Mode**: Run producers with minimal resources using snapshots (4-6GB RAM)
+- **Flexible Snapshot System**: Support for multiple snapshot providers and compression formats
+- **Enhanced Scripts**: All scripts now work from any directory with improved error handling
+
 ## Overview
 
 Libre is a blockchain platform based on AntelopeIO technology. This setup provides:
@@ -10,14 +17,23 @@ Libre is a blockchain platform based on AntelopeIO technology. This setup provid
 - **Libre Testnet API Node** (Port 9889)
 - **State History Plugin (SHiP)** endpoints for both networks
 - **P2P connectivity** to official Libre peers
+- **Block Producer Support** with lightweight mode option
 
 ## Prerequisites
 
+### For API Nodes
 - Docker and Docker Compose installed
 - At least 8GB RAM available
 - 100GB+ free disk space for blockchain data
 - Stable internet connection
 - Ports 9888, 9889, 9876, 9877, 9080, 9081 available
+
+### For Block Producers (Lightweight Mode)
+- Docker and Docker Compose installed
+- 4-6GB RAM available
+- 20GB free disk space (snapshots only)
+- Stable internet connection
+- Producer account and keys registered on network
 
 ## Quick Start
 
@@ -167,33 +183,61 @@ The repository includes two deployment scripts for configuring nodes:
 ## Directory Structure
 
 ```
-docker-libre-node/
-├── Dockerfile                 # Custom Libre node image
-├── docker-compose.yml         # Docker Compose configuration
-├── build.sh                   # Docker image build script
+libre-node/
+├── CLAUDE.md                  # Claude Code guidance file
+├── README.md                  # This documentation
+├── docker-compose.sh          # Docker compose wrapper
 ├── setup-permissions.sh       # Permission setup script
+├── logs.sh                    # Quick log viewer
+├── config/                    # Configuration directory
+│   └── snapshot-providers.conf # Snapshot provider configuration
+├── docker/                    # Docker configuration
+│   ├── Dockerfile            # Custom Libre node image
+│   ├── docker-compose.yml    # Standard node compose file
+│   ├── docker-compose-producer.yml # Producer node compose file
+│   └── build.sh              # Docker image build script
 ├── mainnet/                   # Mainnet configuration
 │   ├── config/
 │   │   ├── config.ini        # Mainnet node configuration
-│   │   └── genesis.json      # Mainnet genesis block
+│   │   ├── genesis.json      # Mainnet genesis block
+│   │   └── logging.json      # Logging configuration
 │   ├── data/                 # Mainnet blockchain data
-│   └── logs/                 # Mainnet logs
+│   ├── logs/                 # Mainnet logs
+│   └── snapshots/            # Snapshot directory
 ├── testnet/                   # Testnet configuration
 │   ├── config/
 │   │   ├── config.ini        # Testnet node configuration
-│   │   └── genesis.json      # Testnet genesis block
+│   │   ├── genesis.json      # Testnet genesis block
+│   │   └── logging.json      # Logging configuration
 │   ├── data/                 # Testnet blockchain data
-│   └── logs/                 # Testnet logs
-└── scripts/                   # Management scripts
-    ├── deploy.sh             # Basic configuration
-    ├── deploy-advanced.sh    # Advanced configuration
-    ├── config-template.sh    # Configuration reference
-    ├── start.sh              # Start nodes
-    ├── stop.sh               # Stop nodes
-    ├── restart.sh            # Restart nodes
-    ├── status.sh             # Check status
-    ├── logs.sh               # View logs
-    └── reset.sh              # Reset data
+│   ├── logs/                 # Testnet logs
+│   └── snapshots/            # Snapshot directory
+├── scripts/                   # Management scripts
+│   ├── deploy.sh             # Basic configuration
+│   ├── deploy-advanced.sh    # Advanced configuration
+│   ├── deploy-producer.sh    # Producer configuration
+│   ├── producer-snapshot.sh  # Snapshot management
+│   ├── start-producer.sh     # Start producer nodes
+│   ├── config-template.sh    # Configuration reference
+│   ├── config-utils.sh       # Configuration utilities
+│   ├── start.sh              # Start nodes
+│   ├── stop.sh               # Stop nodes
+│   ├── restart.sh            # Restart nodes
+│   ├── status.sh             # Check status
+│   ├── logs.sh               # View logs
+│   ├── reset.sh              # Reset all data
+│   ├── reset-db.sh           # Reset database only
+│   ├── snapshot-manager.sh   # Snapshot management
+│   ├── maintenance.sh        # Maintenance utilities
+│   └── error-recovery.sh     # Error recovery tools
+└── docs/                      # Documentation
+    ├── README.md             # Documentation index
+    ├── DEPLOYMENT_GUIDE.md   # Deployment guide
+    ├── SCRIPT_UPDATES.md     # Script documentation
+    ├── DEFAULT_VALUES.md     # Default values reference
+    ├── api/                  # API documentation
+    ├── examples/             # Example configurations
+    └── troubleshooting/      # Troubleshooting guides
 ```
 
 ## Configuration Files
@@ -503,7 +547,34 @@ For issues and questions:
 
 ## Changelog
 
-### v1.1.0
+### v2.0.0 - Block Producer Support
+
+- **Producer Functionality:** Complete block producer support
+  - `deploy-producer.sh` for producer configuration
+  - Producer plugin integration
+  - Signature provider support
+  - Security-focused defaults
+- **Lightweight Producer Mode:** Minimal resource usage for producers
+  - Snapshot-based initialization
+  - Memory-only state (4-6GB RAM vs 16GB+)
+  - tmpfs volumes for temporary data
+  - Automatic state pruning (last 1000 blocks)
+- **Snapshot Management:** Flexible snapshot provider system
+  - `producer-snapshot.sh` for snapshot downloads
+  - `config/snapshot-providers.conf` for provider configuration
+  - Support for multiple compression formats (zst, gz, bz2, xz)
+  - EOSUSA as default provider
+- **Enhanced Scripts:**
+  - `start-producer.sh` for lightweight producer startup
+  - Path fixes for all scripts (work from any directory)
+  - Improved error handling and validation
+  - Added `CLAUDE.md` for AI assistance
+- **Docker Improvements:**
+  - `docker-compose-producer.yml` for optimized producer containers
+  - Memory limits and health checks
+  - Host network mode for performance
+
+### v1.1.0 - Configuration Management
 
 - **Configuration Management:** Centralized all settings in `config.ini` files
 - **Deployment Scripts:** Added interactive configuration scripts
@@ -515,7 +586,7 @@ For issues and questions:
 - **Backup System:** Automatic backup creation with timestamps
 - **Documentation:** Updated README with new configuration process
 
-### v1.0.0
+### v1.0.0 - Initial Release
 
 - Initial release
 - Libre mainnet and testnet support
