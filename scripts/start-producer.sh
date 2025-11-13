@@ -42,7 +42,7 @@ check_snapshot() {
     
     if [ ! -f "$snapshot_path" ]; then
         print_error "Snapshot not found for $network at $snapshot_path"
-        print_warning "Run './scripts/producer-snapshot.sh' to download snapshot first"
+        print_warning "Run '$SCRIPT_DIR/producer-snapshot.sh' to download snapshot first"
         return 1
     fi
     
@@ -62,7 +62,7 @@ check_producer_config() {
     
     if ! grep -q "^plugin = eosio::producer_plugin" "$config_file"; then
         print_error "Producer plugin not enabled for $network"
-        print_warning "Run './scripts/deploy-producer.sh' to configure producer first"
+        print_warning "Run '$SCRIPT_DIR/deploy-producer.sh' to configure producer first"
         return 1
     fi
     
