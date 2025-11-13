@@ -152,6 +152,9 @@ The repository includes two deployment scripts for configuring nodes:
 | ---------------------------- | -------------------------------------------------- |
 | `scripts/deploy.sh`          | Basic node configuration (network settings)        |
 | `scripts/deploy-advanced.sh` | Advanced node configuration (all settings)         |
+| `scripts/deploy-producer.sh` | **NEW**: Configure block producer functionality   |
+| `scripts/producer-snapshot.sh` | **NEW**: Download/manage snapshots for producers |
+| `scripts/start-producer.sh`  | **NEW**: Start lightweight producer nodes         |
 | `scripts/config-template.sh` | Show all configuration options and recommendations |
 | `scripts/start.sh`           | Start both nodes (builds image if needed)          |
 | `scripts/stop.sh`            | Stop both nodes                                    |
@@ -301,6 +304,135 @@ For manual customization, edit the `config.ini` files directly:
 - `testnet/config/config.ini` for testnet settings
 
 The `docker-compose.yml` file manages container configuration only.
+
+## Block Producer Configuration
+
+⚠️ **IMPORTANT**: Producer functionality is only for authorized block producers. Only enable if you have proper authorization from the Libre network.
+
+### Producer Setup
+
+1. **Configure Producer Mode:**
+
+   ```bash
+   # Interactive producer configuration
+   ./scripts/deploy-producer.sh
+   
+   # Or include in advanced deployment
+   ./scripts/deploy-advanced.sh
+   ```
+
+2. **Producer Configuration Options:**
+
+   - **Producer Account Name**: Your registered block producer account
+   - **Authentication Method**: Private key or signature provider (recommended)
+   - **Stale Production**: Enable production when not scheduled (testnet only)
+   - **API Restriction**: Limit API access to localhost for security
+   - **P2P Transaction Control**: Disable transaction acceptance via P2P
+
+3. **Security Requirements:**
+
+   ```bash
+   # Restrict API to localhost only (recommended for producers)
+   http-server-address = 127.0.0.1:9888  # Mainnet
+   http-server-address = 127.0.0.1:9889  # Testnet
+   
+   # Use signature providers instead of private keys
+   signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY
+   
+   # Disable P2P transaction acceptance
+   p2p-accept-transactions = false
+   api-accept-transactions = true
+   ```
+
+4. **Producer Status Check:**
+
+   ```bash
+   # Check producer configuration
+   ./scripts/deploy-producer.sh  # Option 3: Show current status
+   
+   # View current producer settings
+   grep -E "(producer-name|signature-provider|enable-stale)" mainnet/config/config.ini
+   ```
+
+### Producer Security Guidelines
+
+- **Key Management**: Never store private keys in plaintext. Use secure key management solutions.
+- **Network Security**: Use firewall rules to restrict access to producer nodes.
+- **API Access**: Restrict HTTP API to localhost only in production.
+- **Monitoring**: Monitor logs for any security issues or unexpected behavior.
+- **Backups**: Maintain secure backups of configuration and keys.
+- **Updates**: Keep the node software updated with latest security patches.
+
+### Producer Configuration Files
+
+Producer settings are added to the existing `config.ini` files:
+
+- **Mainnet Producer**: `mainnet/config/config.ini`
+- **Testnet Producer**: `testnet/config/config.ini`
+
+Key producer settings:
+```ini
+# Producer Plugin (enable for block production)
+plugin = eosio::producer_plugin
+plugin = eosio::producer_api_plugin
+
+# Producer Configuration
+producer-name = yourproducername
+signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY
+enable-stale-production = false  # true for testnet only
+
+# Security Settings for Producers
+http-server-address = 127.0.0.1:9888  # Restrict API access
+p2p-accept-transactions = false        # Disable P2P transactions
+api-accept-transactions = true         # Accept transactions via API only
+```
+
+### Lightweight Producer Mode (Snapshot-Based)
+
+For block producers who don't need full state history, use the lightweight mode that:
+- Downloads fresh snapshots from EOSUSA (https://snapshots.eosusa.io)
+- Keeps only the last 1000 blocks in memory
+- Uses minimal disk space (4GB state vs 32GB)
+- Starts quickly from snapshot (5-10 minutes)
+- Runs with tmpfs (RAM-based) storage for blocks/state
+
+#### Lightweight Setup Process
+
+1. **Configure Producer Keys:**
+   ```bash
+   # Choose option 3 or 4 for lightweight mode
+   ./scripts/deploy-producer.sh
+   ```
+
+2. **Download Latest Snapshot:**
+   ```bash
+   # Downloads and prepares snapshot
+   ./scripts/producer-snapshot.sh
+   # Choose option 1 for mainnet or 2 for testnet
+   ```
+
+3. **Start Lightweight Producer:**
+   ```bash
+   # Start with optimized Docker compose
+   ./scripts/start-producer.sh
+   # Or manually:
+   docker-compose -f docker/docker-compose-producer.yml up -d
+   ```
+
+#### Lightweight Mode Benefits
+
+- **Minimal Resources**: 4-6GB RAM instead of 16GB+
+- **Fast Restarts**: Fresh from snapshot in minutes
+- **No State Accumulation**: Blocks pruned automatically
+- **RAM-Based Performance**: Uses tmpfs for temporary data
+- **Automatic Snapshot Loading**: Starts from latest network state
+
+#### Snapshot Sources
+
+- **Mainnet**: https://snapshots.eosusa.io/snapshots/libre
+- **Testnet**: https://snapshots.eosusa.io/snapshots/libretestnet
+
+Updated daily with compressed `.bin.zst` format.
 
 ## Security Considerations
 
