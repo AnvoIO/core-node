@@ -14,13 +14,15 @@ NC='\033[0m' # No Color
 
 # Source configuration utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 if [ -f "$SCRIPT_DIR/config-utils.sh" ]; then
     source "$SCRIPT_DIR/config-utils.sh"
 fi
 
 # Configuration files
-MAINNET_CONFIG="mainnet/config/config.ini"
-TESTNET_CONFIG="testnet/config/config.ini"
+MAINNET_CONFIG="$PROJECT_ROOT/mainnet/config/config.ini"
+TESTNET_CONFIG="$PROJECT_ROOT/testnet/config/config.ini"
 
 # Function to print colored output
 print_status() {
