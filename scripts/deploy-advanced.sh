@@ -178,7 +178,9 @@ update_config_advanced() {
     local contracts_console="${11}"
     local verbose_http_errors="${12}"
     local pause_on_startup="${13}"
-    shift 13
+    local producer_enabled="${14}"
+    local producer_name="${15}"
+    shift 15
     local p2p_peers=("$@")
     
     print_status "Updating $config_file with advanced settings..."
@@ -228,6 +230,30 @@ update_config_advanced() {
     for peer in "${p2p_peers[@]}"; do
         echo "p2p-peer-address = $peer" >> "$config_file"
     done
+    
+    # Update producer configuration
+    if [ "$producer_enabled" = "true" ]; then
+        print_status "Enabling producer mode for $producer_name"
+        
+        # Enable producer plugin
+        sed -i 's|^#plugin = eosio::producer_plugin|plugin = eosio::producer_plugin|' "$config_file"
+        sed -i 's|^#plugin = eosio::producer_api_plugin|plugin = eosio::producer_api_plugin|' "$config_file"
+        
+        # Set producer name
+        sed -i "s|^#producer-name = yourproducername|producer-name = $producer_name|" "$config_file"
+        
+        # Disable pause on startup for producers
+        if [ "$pause_on_startup" = "true" ]; then
+            print_warning "Disabling pause-on-startup for producer mode"
+            sed -i "s|^pause-on-startup = true|#pause-on-startup = true  # Disabled for producer mode|" "$config_file"
+        fi
+        
+        print_warning "IMPORTANT: Configure producer keys using deploy-producer.sh after deployment"
+    else
+        # Ensure producer plugins are disabled
+        sed -i 's|^plugin = eosio::producer_plugin|#plugin = eosio::producer_plugin|' "$config_file"
+        sed -i 's|^plugin = eosio::producer_api_plugin|#plugin = eosio::producer_api_plugin|' "$config_file"
+    fi
     
     print_status "Advanced configuration updated successfully"
 }
@@ -366,6 +392,38 @@ main() {
     
     echo
     
+    # Get producer configuration
+    print_header "Producer Configuration (Optional)"
+    
+    print_warning "Producer mode is for authorized block producers only"
+    print_warning "Only enable if you have proper authorization and keys"
+    echo
+    
+    configure_producer=$(get_yes_no "Configure producer mode?" "false")
+    
+    mainnet_producer_enabled="false"
+    testnet_producer_enabled="false"
+    mainnet_producer_name=""
+    testnet_producer_name=""
+    
+    if [ "$configure_producer" = "true" ]; then
+        mainnet_producer_enabled=$(get_yes_no "Enable mainnet producer?" "false")
+        testnet_producer_enabled=$(get_yes_no "Enable testnet producer?" "false")
+        
+        if [ "$mainnet_producer_enabled" = "true" ]; then
+            mainnet_producer_name=$(get_input "Mainnet producer account name" "")
+        fi
+        
+        if [ "$testnet_producer_enabled" = "true" ]; then
+            testnet_producer_name=$(get_input "Testnet producer account name" "")
+        fi
+        
+        print_warning "Producer keys must be configured manually after deployment"
+        print_warning "Use the deploy-producer.sh script for detailed producer setup"
+    fi
+    
+    echo
+    
     # Validate configuration
     print_header "Validating Configuration"
     
@@ -414,6 +472,20 @@ main() {
     echo "  P2P Peers: ${testnet_p2p_peers[*]}"
     echo
     
+    if [ "$configure_producer" = "true" ]; then
+        print_status "Producer Configuration:"
+        echo "  Mainnet Producer: $mainnet_producer_enabled"
+        if [ "$mainnet_producer_enabled" = "true" ]; then
+            echo "    Account: $mainnet_producer_name"
+        fi
+        echo "  Testnet Producer: $testnet_producer_enabled"
+        if [ "$testnet_producer_enabled" = "true" ]; then
+            echo "    Account: $testnet_producer_name"
+        fi
+        echo "  Note: Use deploy-producer.sh for complete producer setup"
+        echo
+    fi
+    
     # Confirm deployment
     confirm=$(get_input "Proceed with deployment? (y/n)" "y" "")
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
@@ -438,6 +510,8 @@ main() {
         "$mainnet_contracts_console" \
         "$mainnet_verbose_http_errors" \
         "$mainnet_pause_on_startup" \
+        "$mainnet_producer_enabled" \
+        "$mainnet_producer_name" \
         "${mainnet_p2p_peers[@]}"
     
     # Update testnet config
@@ -454,6 +528,8 @@ main() {
         "$testnet_contracts_console" \
         "$testnet_verbose_http_errors" \
         "$testnet_pause_on_startup" \
+        "$testnet_producer_enabled" \
+        "$testnet_producer_name" \
         "${testnet_p2p_peers[@]}"
     
     # Update docker-compose.yml
