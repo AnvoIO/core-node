@@ -108,9 +108,9 @@ plugin = eosio::net_plugin
 # Chain Configuration - Lightweight
 chain-state-db-size-mb = 4096
 
-# EOS VM OC Configuration - Reduced for lightweight mode
-eos-vm-oc-cache-size-mb = 256
-eos-vm-oc-compile-threads = 1
+# EOS VM Configuration - Disable OC for lightweight mode
+wasm-runtime = eos-vm
+eos-vm-oc-enable = none
 
 # Snapshot-based startup (lightweight mode)
 # Note: snapshot must be specified via command line, not config file
