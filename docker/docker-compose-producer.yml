@@ -28,11 +28,11 @@ services:
       - type: tmpfs
         target: /opt/eosio/data/state
         tmpfs:
-          size: 4G
+          size: 20G
     network_mode: host
     restart: unless-stopped
-    mem_limit: 8g
-    memswap_limit: 8g
+    mem_limit: 24g
+    memswap_limit: 24g
     cpu_shares: 2048
     environment:
       - PRODUCER_MODE=true
@@ -71,11 +71,11 @@ services:
       - type: tmpfs
         target: /opt/eosio/data/state
         tmpfs:
-          size: 2G
+          size: 18G
     network_mode: host
     restart: unless-stopped
-    mem_limit: 4g
-    memswap_limit: 4g
+    mem_limit: 20g
+    memswap_limit: 20g
     cpu_shares: 1024
     environment:
       - PRODUCER_MODE=true
