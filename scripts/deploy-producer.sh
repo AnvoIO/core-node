@@ -108,6 +108,11 @@ plugin = eosio::net_plugin
 # Chain Configuration - Lightweight
 chain-state-db-size-mb = 16384
 
+# WASM Runtime Configuration - Use interpreter to avoid memory mapping issues
+wasm-runtime = eos-vm
+eos-vm-oc-enable = none
+eos-vm-oc-cache-size-mb = 0
+
 # Snapshot-based startup (lightweight mode)
 # Note: snapshot must be specified via command line, not config file
 
