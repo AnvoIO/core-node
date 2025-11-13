@@ -88,29 +88,12 @@ configure_producer() {
     validate_producer_name "$producer_name" || return 1
     
     echo ""
-    print_warning "SECURITY: Choose authentication method"
-    echo "1) Private key (NOT RECOMMENDED for production)"
-    echo "2) Signature provider (RECOMMENDED)"
-    read -p "Choose option (1 or 2): " auth_method
-    
-    case $auth_method in
-        1)
-            read -s -p "Enter private key: " private_key
-            echo
-            auth_config="private-key = $private_key"
-            ;;
-        2)
-            read -p "Enter public key: " public_key
-            validate_public_key "$public_key" || return 1
-            read -s -p "Enter private key for signature provider: " private_key
-            echo
-            auth_config="signature-provider = $public_key=KEY:$private_key"
-            ;;
-        *)
-            print_error "Invalid option"
-            return 1
-            ;;
-    esac
+    print_status "Configuring signature provider (required for nodeos v5.0+)"
+    read -p "Enter public key: " public_key
+    validate_public_key "$public_key" || return 1
+    read -s -p "Enter private key: " private_key
+    echo
+    auth_config="signature-provider = $public_key=KEY:$private_key"
     
     echo ""
     read -p "Enable stale production? (y/N): " enable_stale
@@ -146,12 +129,8 @@ configure_producer() {
     
     # Configure producer settings
     sed -i.bak "s/^#producer-name = yourproducername/producer-name = $producer_name/" "$config_file"
-    # Configure authentication (private-key or signature-provider)
-    if [[ $auth_config == private-key* ]]; then
-        sed -i.bak "s/^# private-key = YOUR_PRIVATE_KEY_HERE/$auth_config/" "$config_file"
-    else
-        sed -i.bak "s/^# signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY/$auth_config/" "$config_file"
-    fi
+    # Configure signature-provider (only supported method in v5.0+)
+    sed -i.bak "s/^# signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY/$auth_config/" "$config_file"
     sed -i.bak "s/^#enable-stale-production = false/enable-stale-production = $stale_production/" "$config_file"
     
     # Apply additional settings
@@ -183,9 +162,8 @@ configure_producer() {
     sed -i.bak 's/^chain-state-history/#chain-state-history/' "$config_file"
     sed -i.bak 's/^state-history-dir/#state-history-dir/' "$config_file"
     
-    # Remove any duplicate private-key entries (cleanup from old versions)
-    # Keep only the first private-key line and remove duplicates
-    awk '!seen[$0] || !/^private-key = /' "$config_file" > "$config_file.tmp" && mv "$config_file.tmp" "$config_file"
+    # Remove any private-key entries (not supported in v5.0+)
+    sed -i.bak '/^private-key = /d' "$config_file"
     
     # Enable other producer settings
     sed -i.bak 's/^#max-transaction-time = 30/max-transaction-time = 30/' "$config_file"
