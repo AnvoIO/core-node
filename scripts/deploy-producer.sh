@@ -95,9 +95,8 @@ configure_producer() {
     
     case $auth_method in
         1)
-            read -s -p "Enter private key: " private_key
-            echo
-            auth_config="private-key = $private_key"
+            print_error "private-key option is deprecated in nodeos v5.0+. Use signature-provider instead."
+            return 1
             ;;
         2)
             read -p "Enter public key: " public_key
@@ -146,7 +145,7 @@ configure_producer() {
     
     # Configure producer settings
     sed -i.bak "s/^#producer-name = yourproducername/producer-name = $producer_name/" "$config_file"
-    sed -i.bak "s/^# private-key = YOUR_PRIVATE_KEY_HERE/$auth_config/" "$config_file"
+# Note: private-key option removed - only signature-provider supported in v5.0+
     sed -i.bak "s/^# signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY/$auth_config/" "$config_file"
     sed -i.bak "s/^#enable-stale-production = false/enable-stale-production = $stale_production/" "$config_file"
     
