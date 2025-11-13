@@ -130,6 +130,9 @@ max-transaction-time = 30
 abi-serializer-max-time-ms = 12500
 producer-threads = 2
 
+# Snapshot Management - Auto-create and prune
+snapshots-dir = /opt/eosio/data/snapshots
+
 # P2P Configuration
 max-clients = 50
 p2p-max-nodes-per-host = 5
