@@ -12,10 +12,14 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Get project root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Configuration files
-MAINNET_CONFIG="mainnet/config/config.ini"
-TESTNET_CONFIG="testnet/config/config.ini"
-DOCKER_COMPOSE="docker/docker-compose.yml"
+MAINNET_CONFIG="$PROJECT_ROOT/mainnet/config/config.ini"
+TESTNET_CONFIG="$PROJECT_ROOT/testnet/config/config.ini"
+DOCKER_COMPOSE="$PROJECT_ROOT/docker/docker-compose.yml"
 
 # Default values
 DEFAULT_LISTEN_IP="0.0.0.0"
