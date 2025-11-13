@@ -35,15 +35,22 @@ print_header() {
     echo -e "${BLUE}================================${NC}"
 }
 
-# Function to check if snapshot exists
+# Function to check if snapshot exists and download if missing
 check_snapshot() {
     local network=$1
     local snapshot_path="$PROJECT_ROOT/$network/data/snapshot.bin"
     
     if [ ! -f "$snapshot_path" ]; then
-        print_error "Snapshot not found for $network at $snapshot_path"
-        print_warning "Run '$SCRIPT_DIR/producer-snapshot.sh' to download snapshot first"
-        return 1
+        print_warning "Snapshot not found for $network. Downloading automatically..."
+        
+        # Call the snapshot script directly to download
+        if ! "$SCRIPT_DIR/producer-snapshot.sh" <<< "$([ "$network" = "mainnet" ] && echo "3" || echo "4")"; then
+            print_error "Failed to download snapshot for $network"
+            return 1
+        fi
+        
+        print_status "Snapshot downloaded successfully"
+        return 0
     fi
     
     # Check snapshot age (warn if older than 24 hours)
