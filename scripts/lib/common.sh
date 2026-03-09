@@ -241,6 +241,19 @@ validate_port() {
     (( port >= 1 && port <= 65535 ))
 }
 
+# check_port_available "port" — returns 0 if port is not in use on the host
+# Warns (but does not block) if the port is already bound.
+# Returns 1 if port is in use, 0 if available.
+check_port_available() {
+    local port="$1"
+    if command -v ss &>/dev/null; then
+        if ss -tlnH "sport = :${port}" 2>/dev/null | grep -q .; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # validate_url "url" — basic URL validation
 validate_url() {
     local url="$1"

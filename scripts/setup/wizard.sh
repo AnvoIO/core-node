@@ -327,10 +327,15 @@ section_ports() {
     local p2p_val
     while true; do
         p2p_val="$(ask_input "P2P port" "$prev_p2p")"
-        if validate_port "$p2p_val"; then
-            break
+        if ! validate_port "$p2p_val"; then
+            log_warn "Invalid port number. Must be 1-65535."
+            continue
         fi
-        log_warn "Invalid port number. Must be 1-65535."
+        if ! check_port_available "$p2p_val"; then
+            log_warn "Port ${p2p_val} is already in use on this host."
+            if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+        fi
+        break
     done
     set_config P2P_PORT "$p2p_val"
 
@@ -339,10 +344,15 @@ section_ports() {
         local http_val
         while true; do
             http_val="$(ask_input "HTTP API port" "$prev_http")"
-            if validate_port "$http_val"; then
-                break
+            if ! validate_port "$http_val"; then
+                log_warn "Invalid port number. Must be 1-65535."
+                continue
             fi
-            log_warn "Invalid port number. Must be 1-65535."
+            if ! check_port_available "$http_val"; then
+                log_warn "Port ${http_val} is already in use on this host."
+                if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+            fi
+            break
         done
         set_config HTTP_PORT "$http_val"
     fi
@@ -352,10 +362,15 @@ section_ports() {
         local ship_val
         while true; do
             ship_val="$(ask_input "State History (SHiP) port" "$prev_ship")"
-            if validate_port "$ship_val"; then
-                break
+            if ! validate_port "$ship_val"; then
+                log_warn "Invalid port number. Must be 1-65535."
+                continue
             fi
-            log_warn "Invalid port number. Must be 1-65535."
+            if ! check_port_available "$ship_val"; then
+                log_warn "Port ${ship_val} is already in use on this host."
+                if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+            fi
+            break
         done
         set_config SHIP_PORT "$ship_val"
     fi
@@ -854,8 +869,15 @@ section_api_gateway() {
     local gw_http
     while true; do
         gw_http="$(ask_input "Public gateway HTTP port" "$prev_gw_http")"
-        if validate_port "$gw_http"; then break; fi
-        log_warn "Invalid port number. Must be 1-65535."
+        if ! validate_port "$gw_http"; then
+            log_warn "Invalid port number. Must be 1-65535."
+            continue
+        fi
+        if ! check_port_available "$gw_http"; then
+            log_warn "Port ${gw_http} is already in use on this host."
+            if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+        fi
+        break
     done
     set_config GATEWAY_HTTP_PORT "$gw_http"
 
@@ -866,8 +888,15 @@ section_api_gateway() {
         local gw_ship
         while true; do
             gw_ship="$(ask_input "Public gateway SHiP/WebSocket port" "$prev_gw_ship")"
-            if validate_port "$gw_ship"; then break; fi
-            log_warn "Invalid port number. Must be 1-65535."
+            if ! validate_port "$gw_ship"; then
+                log_warn "Invalid port number. Must be 1-65535."
+                continue
+            fi
+            if ! check_port_available "$gw_ship"; then
+                log_warn "Port ${gw_ship} is already in use on this host."
+                if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+            fi
+            break
         done
         set_config GATEWAY_SHIP_PORT "$gw_ship"
     fi
@@ -1042,10 +1071,15 @@ section_monitoring() {
         local prom_port
         while true; do
             prom_port="$(ask_input "Prometheus metrics port" "$prev_prom_port")"
-            if validate_port "$prom_port"; then
-                break
+            if ! validate_port "$prom_port"; then
+                log_warn "Invalid port number. Must be 1-65535."
+                continue
             fi
-            log_warn "Invalid port number. Must be 1-65535."
+            if ! check_port_available "$prom_port"; then
+                log_warn "Port ${prom_port} is already in use on this host."
+                if ! ask_yes_no "Use it anyway?" "n"; then continue; fi
+            fi
+            break
         done
         set_config PROMETHEUS_PORT "$prom_port"
     else
