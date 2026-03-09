@@ -1,0 +1,91 @@
+{
+  "includes": [],
+  "appenders": [
+    {
+      "name": "stderr",
+      "type": "console",
+      "args": {
+        "stream": "std_error",
+        "level_colors": [
+          { "level": "debug", "color": "green" },
+          { "level": "warn", "color": "brown" },
+          { "level": "error", "color": "red" }
+        ],
+        "flush": true
+      },
+      "enabled": true
+    },
+    {
+      "name": "stdout",
+      "type": "console",
+      "args": {
+        "stream": "std_out",
+        "level_colors": [
+          { "level": "debug", "color": "green" },
+          { "level": "warn", "color": "brown" },
+          { "level": "error", "color": "red" }
+        ],
+        "flush": true
+      },
+      "enabled": true
+    }
+  ],
+  "loggers": [
+    {
+      "name": "default",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "net_plugin_impl",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "http_plugin",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "producer_plugin",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "transaction_success_tracing",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "transaction_failure_tracing",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "state_history",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    },
+    {
+      "name": "trace_api",
+      "level": "error",
+      "enabled": true,
+      "additivity": false,
+      "appenders": ["stderr"]
+    }
+  ]
+}

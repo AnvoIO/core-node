@@ -1,636 +1,272 @@
-# Libre Blockchain Node Docker Setup
+# Libre Node
 
-This repository contains a Docker-based setup for running Libre blockchain nodes (mainnet and testnet) using AntelopeIO Leap v5.0.3.
-
-## 🚀 New in v2.0: Block Producer Support
-
-- **Full Producer Mode**: Configure nodes as block producers with security best practices
-- **Lightweight Producer Mode**: Run producers with minimal resources using snapshots (4-6GB RAM)
-- **Flexible Snapshot System**: Support for multiple snapshot providers and compression formats
-- **Enhanced Scripts**: All scripts now work from any directory with improved error handling
-
-## Overview
-
-Libre is a blockchain platform based on AntelopeIO technology. This setup provides:
-
-- **Libre Mainnet API Node** (Port 9888)
-- **Libre Testnet API Node** (Port 9889)
-- **State History Plugin (SHiP)** endpoints for both networks
-- **P2P connectivity** to official Libre peers
-- **Block Producer Support** with lightweight mode option
-
-## Prerequisites
-
-### For API Nodes
-- Docker and Docker Compose installed
-- At least 8GB RAM available
-- 100GB+ free disk space for blockchain data
-- Stable internet connection
-- Ports 9888, 9889, 9876, 9877, 9080, 9081 available
-
-### For Block Producers (Lightweight Mode)
-- Docker and Docker Compose installed
-- 4-6GB RAM available
-- 20GB free disk space (snapshots only)
-- Stable internet connection
-- Producer account and keys registered on network
+Docker-based deployment system for Libre blockchain nodes using AntelopeIO Leap v5.0.3. Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring.
 
 ## Quick Start
 
-1. **Clone the repository:**
+```bash
+# Run the interactive setup wizard
+./scripts/setup/wizard.sh
 
-   ```bash
-   git clone <repository-url>
-   cd docker-libre-node
-   ```
+# Start the node
+./scripts/node/start.sh
+```
 
-2. **Set up permissions (required for Docker volume mounts):**
+The wizard walks through all configuration options and writes a `node.conf` file. All Docker, nodeos, and operational configs are generated from that single file.
 
-   ```bash
-   ./setup-permissions.sh
-   ```
+For non-interactive setup, edit `node.conf` directly and run:
 
-3. **Configure the nodes (recommended):**
+```bash
+./scripts/setup/wizard.sh --config node.conf
+```
 
-   ```bash
-   # Basic configuration (network settings only)
-   ./scripts/deploy.sh
+## Node Roles
 
-   # OR Advanced configuration (all settings)
-   ./scripts/deploy-advanced.sh
-   ```
+| Role | Description | Plugins |
+|------|-------------|---------|
+| **producer** | Block producer with signing keys | chain, chain_api, http, net, producer, producer_api |
+| **seed** | P2P relay node (no HTTP API) | chain, http, net |
+| **light-api** | API node with limited block history | chain, chain_api, http, net |
+| **full-api** | Full API with state history (SHiP) | chain, chain_api, http, net, state_history |
+| **full-history** | Complete chain history with traces | chain, chain_api, http, net, state_history, trace_api |
 
-4. **Build and start the nodes:**
+## Network Information
 
-   ```bash
-   ./scripts/start.sh
-   ```
+| Network | Chain ID |
+|---------|----------|
+| Mainnet | `38b1d7815474d0bf271d659c50b579893768b3b2c3dc6a14c4be6a7b3e14f2fb` |
+| Testnet | `b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee` |
 
-5. **Check node status:**
-   ```bash
-   ./scripts/status.sh
-   ```
+Ports, bind IP, and other settings are fully configurable through the wizard.
 
-## Manual Setup
+## Prerequisites
 
-If you prefer to set up manually:
+- Docker and Docker Compose
+- BTRFS filesystem on all storage volumes (required for filesystem snapshots)
+- Sufficient RAM for your node role (4GB producer to 64GB+ full-history)
+- Stable internet connection
 
-1. **Build the Docker image:**
+## Architecture
 
-   ```bash
-   ./docker/build.sh
-   ```
+### Configuration Flow
 
-2. **Start the nodes:**
+```
+wizard.sh → node.conf → generate-config.sh → config.ini
+                                            → docker-compose.yml
+                                            → genesis.json
+                                            → logging.json
+                                            → Caddyfile (if TLS enabled)
+```
 
-   ```bash
-   # Using the convenience script (recommended)
-   ./docker-compose.sh up -d
+`node.conf` is the single source of truth. All generated configs live in `$STORAGE_PATH/config/`.
 
-   # Or directly with docker-compose
-   docker-compose -f docker/docker-compose.yml up -d
-   ```
+### Key Features
 
-3. **View logs:**
-
-   ```bash
-   # Using convenience script
-   ./docker-compose.sh logs -f libre-mainnet    # Mainnet logs
-   ./docker-compose.sh logs -f libre-testnet    # Testnet logs
-
-   # Or using management scripts
-   ./scripts/logs.sh mainnet    # Mainnet logs
-   ./scripts/logs.sh testnet    # Testnet logs
-   ```
-
-## Configuration
-
-### Deployment Scripts
-
-The repository includes two deployment scripts for configuring nodes:
-
-#### Basic Deployment (`deploy.sh`)
-
-- Configures network settings (IP addresses, ports, P2P peers)
-- Suitable for most users
-- Quick setup with sensible defaults
-
-#### Advanced Deployment (`deploy-advanced.sh`)
-
-- Configures all available settings
-- Performance tuning options
-- Logging and security settings
-- Database configuration
-- Suitable for production deployments
-
-#### Configuration Template (`config-template.sh`)
-
-- Shows all available configuration options
-- Provides recommendations for different use cases
-- Reference for manual configuration
-
-### Network Information
-
-| Network | Chain ID                                                           | API Port | P2P Port | SHiP Port |
-| ------- | ------------------------------------------------------------------ | -------- | -------- | --------- |
-| Mainnet | `38b1d7815474d0bf271d659c50b579893768b3b2c3dc6a14c4be6a7b3e14f2fb` | 9888     | 9876     | 9080      |
-| Testnet | `b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee` | 9889     | 9877     | 9081      |
-
-### P2P Peers
-
-**Mainnet:**
-
-- `p2p.libre.iad.cryptobloks.io:9876`
-- `p2p.libre.pdx.cryptobloks.io:9876`
-
-**Testnet:**
-
-- `p2p.testnet.libre.iad.cryptobloks.io:9876`
-- `p2p.testnet.libre.pdx.cryptobloks.io:9876`
-
-## API Endpoints
-
-### Mainnet
-
-- **HTTP API:** http://localhost:9888
-- **State History:** ws://localhost:9080
-- **Node Info:** http://localhost:9888/v1/chain/get_info
-
-### Testnet
-
-- **HTTP API:** http://localhost:9889
-- **State History:** ws://localhost:9081
-- **Node Info:** http://localhost:9889/v1/chain/get_info
-
-## Management Scripts
-
-| Script                       | Description                                        |
-| ---------------------------- | -------------------------------------------------- |
-| `scripts/deploy.sh`          | Basic node configuration (network settings)        |
-| `scripts/deploy-advanced.sh` | Advanced node configuration (all settings)         |
-| `scripts/deploy-producer.sh` | **NEW**: Configure block producer functionality   |
-| `scripts/producer-snapshot.sh` | **NEW**: Download/manage snapshots for producers |
-| `scripts/start-producer.sh`  | **NEW**: Start lightweight producer nodes         |
-| `scripts/manage-snapshots.sh` | **NEW**: Create, prune, and monitor local snapshots |
-| `scripts/restart-producer.sh` | **NEW**: Restart producer with snapshot options   |
-| `scripts/config-template.sh` | Show all configuration options and recommendations |
-| `scripts/start.sh`           | Start both nodes (builds image if needed)          |
-| `scripts/stop.sh`            | Stop both nodes                                    |
-| `scripts/restart.sh`         | Restart both nodes                                 |
-| `scripts/logs.sh`            | View logs (mainnet\|testnet)                       |
-| `scripts/status.sh`          | Check node status and connectivity                 |
-| `scripts/reset.sh`           | Reset node data (WARNING: deletes all data)        |
-| `build.sh`                   | Build Docker image manually                        |
+- **State-in-memory (tmpfs)**: Chain state stored in RAM to protect SSDs from write wear. tmpfs size is auto-calculated from `CHAIN_STATE_DB_SIZE` + 10% headroom (allocated on use, not reserved).
+- **EOSIO snapshot scheduling**: Periodic chain snapshots via Leap's producer API (`/v1/producer/schedule_snapshot`).
+- **S3 archival**: Streaming backup to S3-compatible storage using rclone with zstd compression.
+- **BTRFS filesystem snapshots**: Consistent full-node backups with minimal downtime (stop → BTRFS snapshot → start → upload from snapshot).
+- **TLS termination**: Caddy reverse proxy with automatic Let's Encrypt certificates.
+- **Firewall**: docker-ufw integration for firewall rules that work with Docker's iptables.
+- **Monitoring**: Webhook alerts (Slack, Discord, PagerDuty, generic) and Prometheus metrics endpoint.
+- **Logging profiles**: production, standard, debug, minimal — applied via JSON logging config.
+- **Host networking**: Direct port binding with configurable bind IP.
 
 ## Directory Structure
 
 ```
 libre-node/
-├── CLAUDE.md                  # Claude Code guidance file
-├── README.md                  # This documentation
-├── docker-compose.sh          # Docker compose wrapper
-├── setup-permissions.sh       # Permission setup script
-├── logs.sh                    # Quick log viewer
-├── config/                    # Configuration directory
-│   └── snapshot-providers.conf # Snapshot provider configuration
-├── docker/                    # Docker configuration
-│   ├── Dockerfile            # Custom Libre node image
-│   ├── docker-compose.yml    # Standard node compose file
-│   ├── docker-compose-producer.yml # Producer node compose file
-│   └── build.sh              # Docker image build script
-├── mainnet/                   # Mainnet configuration
-│   ├── config/
-│   │   ├── config.ini        # Mainnet node configuration
-│   │   ├── genesis.json      # Mainnet genesis block
-│   │   └── logging.json      # Logging configuration
-│   ├── data/                 # Mainnet blockchain data
-│   ├── logs/                 # Mainnet logs
-│   └── snapshots/            # Snapshot directory
-├── testnet/                   # Testnet configuration
-│   ├── config/
-│   │   ├── config.ini        # Testnet node configuration
-│   │   ├── genesis.json      # Testnet genesis block
-│   │   └── logging.json      # Logging configuration
-│   ├── data/                 # Testnet blockchain data
-│   ├── logs/                 # Testnet logs
-│   └── snapshots/            # Snapshot directory
-├── scripts/                   # Management scripts
-│   ├── deploy.sh             # Basic configuration
-│   ├── deploy-advanced.sh    # Advanced configuration
-│   ├── deploy-producer.sh    # Producer configuration
-│   ├── producer-snapshot.sh  # External snapshot downloads
-│   ├── manage-snapshots.sh   # Local snapshot management (create/prune)
-│   ├── start-producer.sh     # Start producer nodes
-│   ├── restart-producer.sh   # Restart producer nodes
-│   ├── config-template.sh    # Configuration reference
-│   ├── config-utils.sh       # Configuration utilities
-│   ├── start.sh              # Start nodes
-│   ├── stop.sh               # Stop nodes
-│   ├── restart.sh            # Restart nodes
-│   ├── status.sh             # Check status
-│   ├── logs.sh               # View logs
-│   ├── reset.sh              # Reset all data
-│   ├── reset-db.sh           # Reset database only
-│   ├── snapshot-manager.sh   # Snapshot management
-│   ├── maintenance.sh        # Maintenance utilities
-│   └── error-recovery.sh     # Error recovery tools
-└── docs/                      # Documentation
-    ├── README.md             # Documentation index
-    ├── DEPLOYMENT_GUIDE.md   # Deployment guide
-    ├── SCRIPT_UPDATES.md     # Script documentation
-    ├── DEFAULT_VALUES.md     # Default values reference
-    ├── api/                  # API documentation
-    ├── examples/             # Example configurations
-    └── troubleshooting/      # Troubleshooting guides
+├── node.conf                      # Your node configuration (single source of truth)
+├── config/
+│   ├── peers-mainnet.conf         # Mainnet peer list (independently updatable)
+│   ├── peers-testnet.conf         # Testnet peer list
+│   ├── snapshot-providers.conf    # Public snapshot provider URLs
+│   └── templates/                 # Config generation templates
+│       ├── config.ini.tmpl
+│       ├── docker-compose.yml.tmpl
+│       └── logging-{production,standard,debug,minimal}.json
+├── docker/
+│   ├── Dockerfile                 # Node image (Ubuntu 22.04 + Leap v5.0.3)
+│   └── entrypoint.sh             # Container entrypoint with snapshot auto-detection
+├── scripts/
+│   ├── setup/
+│   │   ├── wizard.sh             # Interactive configuration wizard
+│   │   ├── generate-config.sh    # Template-based config generator
+│   │   └── validate-config.sh    # Configuration validator
+│   ├── node/
+│   │   ├── start.sh              # Start node (builds image, restores snapshot if needed)
+│   │   ├── stop.sh               # Graceful shutdown with process polling
+│   │   ├── restart.sh            # Stop then start
+│   │   ├── status.sh             # Container, head block, LIB, peers, block age
+│   │   └── logs.sh               # Docker log viewer (-f, -n, --since)
+│   ├── snapshot/
+│   │   ├── create.sh             # Create EOSIO snapshot via producer API
+│   │   ├── restore.sh            # Multi-source restore (local/S3/URL/providers)
+│   │   ├── prune.sh              # Retention-based cleanup with --dry-run
+│   │   └── schedule.sh           # Schedule/list/cancel via producer API
+│   ├── backup/
+│   │   ├── full-backup.sh        # BTRFS snapshot + S3 upload orchestration
+│   │   ├── s3-push.sh            # Streaming tar+zstd+rclone upload
+│   │   ├── s3-pull.sh            # Download and decompress from S3
+│   │   ├── s3-list.sh            # List remote backups with manifests
+│   │   └── s3-prune.sh           # Remote retention enforcement
+│   ├── monitoring/
+│   │   ├── health-check.sh       # Container, API, block age, peer checks + webhooks
+│   │   └── metrics.sh            # Prometheus metrics (--serve or --once)
+│   ├── maintenance/
+│   │   ├── error-recovery.sh     # 7 diagnostic checks with automated recovery
+│   │   └── reset.sh              # Safe reset with per-component confirmation
+│   └── lib/
+│       ├── common.sh             # Logging, prompts, validators, utilities
+│       ├── config-utils.sh       # node.conf read/write (load, get, set, list)
+│       └── network-defaults.sh   # Chain IDs, ports, plugins, resources per role
+└── docs/                          # Documentation
 ```
 
-## Configuration Files
+## Scripts Reference
 
-### Node Configuration (`config.ini`)
+### Setup
 
-Key configuration options:
+| Script | Description |
+|--------|-------------|
+| `scripts/setup/wizard.sh` | Interactive wizard — configures all options, writes `node.conf` |
+| `scripts/setup/wizard.sh --config node.conf` | Non-interactive mode — reads existing config, generates all files |
+| `scripts/setup/generate-config.sh node.conf` | Generate Docker/nodeos configs from `node.conf` |
+| `scripts/setup/validate-config.sh node.conf` | Validate `node.conf` for completeness and correctness |
 
-- **Network Settings:** HTTP server, P2P endpoints, state history
-- **Performance Tuning:** Chain threads, HTTP threads, transaction timeouts
-- **Database Configuration:** Chain state size, client limits
-- **Logging Settings:** Console output, verbose errors, startup behavior
-- **Security Settings:** Pause on startup, host validation
-- **P2P Configuration:** Peer addresses, connection limits
+### Node Operations
 
-### Configuration Management
+| Script | Description |
+|--------|-------------|
+| `scripts/node/start.sh` | Build image if needed, restore snapshot if needed, start container |
+| `scripts/node/stop.sh` | Graceful shutdown with process polling |
+| `scripts/node/restart.sh` | Stop then start |
+| `scripts/node/status.sh` | Container status, head block, LIB, peer count, block age |
+| `scripts/node/logs.sh` | View container logs (`-f`, `-n`, `--since`) |
 
-All configuration is now centralized in the `config.ini` files. The `docker-compose.yml` file no longer contains redundant settings and only manages:
+### Snapshots
 
-- Container configuration
-- Port mappings
-- Volume mounts
-- Network settings
+| Script | Description |
+|--------|-------------|
+| `scripts/snapshot/create.sh` | Create EOSIO snapshot via `/v1/producer/create_snapshot` |
+| `scripts/snapshot/restore.sh` | Restore from local, S3, URL, or public providers |
+| `scripts/snapshot/prune.sh` | Prune old snapshots by retention count (`--dry-run` supported) |
+| `scripts/snapshot/schedule.sh` | Schedule/list/cancel periodic snapshots via producer API |
 
-### Genesis Files
+### S3 Backup
 
-Contains initial blockchain state:
+| Script | Description |
+|--------|-------------|
+| `scripts/backup/full-backup.sh` | Full backup: EOSIO snapshot → stop → BTRFS snapshot → start → S3 upload |
+| `scripts/backup/s3-push.sh` | Stream `tar \| zstd \| rclone rcat` for blocks, state-history, state |
+| `scripts/backup/s3-pull.sh` | Download and decompress from S3 (`--snapshots-only` supported) |
+| `scripts/backup/s3-list.sh` | List remote backups with manifest parsing |
+| `scripts/backup/s3-prune.sh` | Enforce remote retention policy |
 
-- **Initial Timestamp:** Genesis block time
-- **Initial Key:** Genesis block producer key
-- **Initial Configuration:** Network parameters
+### Monitoring
+
+| Script | Description |
+|--------|-------------|
+| `scripts/monitoring/health-check.sh` | Check container, API, block age, peers; send webhook alerts |
+| `scripts/monitoring/metrics.sh` | Prometheus metrics via socat (`--serve`) or stdout (`--once`) |
+
+### Maintenance
+
+| Script | Description |
+|--------|-------------|
+| `scripts/maintenance/error-recovery.sh` | 7 diagnostic checks with automated recovery options |
+| `scripts/maintenance/reset.sh` | Safe reset with per-component confirmation prompts |
+
+## Configuration Reference
+
+All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of these interactively.
+
+### Core Settings
+
+| Key | Description | Example |
+|-----|-------------|---------|
+| `NETWORK` | `mainnet` or `testnet` | `mainnet` |
+| `NODE_ROLE` | Node role (see table above) | `producer` |
+| `LEAP_VERSION` | AntelopeIO Leap version | `5.0.3` |
+| `CONTAINER_NAME` | Docker container name | `libre-mainnet-producer` |
+| `STORAGE_PATH` | Base path for all node data | `/data/libre-mainnet` |
+
+### Network Settings
+
+| Key | Description | Example |
+|-----|-------------|---------|
+| `BIND_IP` | IP address to bind services | `0.0.0.0` |
+| `HTTP_PORT` | HTTP API port (not used for seed role) | `8888` |
+| `P2P_PORT` | P2P network port | `9876` |
+| `SHIP_PORT` | State History port (full-api/full-history) | `8080` |
+
+### Performance Tuning
+
+| Key | Description | Default by Role |
+|-----|-------------|-----------------|
+| `CHAIN_STATE_DB_SIZE` | Chain state DB size in MB | 16384 (producer) to 65536 (full-history) |
+| `CHAIN_THREADS` | Chain processing threads | 2-4 |
+| `HTTP_THREADS` | HTTP server threads | 2-6 |
+| `MAX_CLIENTS` | Max P2P client connections | 25-250 |
+| `MAX_TRANSACTION_TIME` | Max transaction time (ms) | 30-1000 |
+
+### State-in-Memory
+
+| Key | Description |
+|-----|-------------|
+| `STATE_IN_MEMORY` | `true` to use tmpfs for chain state |
+| `STATE_TMPFS_SIZE` | Auto-calculated: `CHAIN_STATE_DB_SIZE` + 10% (optional override) |
+
+### Features
+
+| Key | Description |
+|-----|-------------|
+| `S3_ENABLED` | Enable S3 backup (`true`/`false`) |
+| `TLS_ENABLED` | Enable Caddy TLS termination |
+| `FIREWALL_ENABLED` | Enable docker-ufw firewall rules |
+| `WEBHOOK_ENABLED` | Enable webhook alerts |
+| `PROMETHEUS_ENABLED` | Enable Prometheus metrics endpoint |
+
+### Producer Settings
+
+| Key | Description |
+|-----|-------------|
+| `PRODUCER_NAME` | Registered producer account name |
+| `SIGNATURE_PROVIDER` | `PUB_KEY=KEY:PRIV_KEY` format |
+
+## Peer Lists
+
+Peer lists are maintained in separate files for independent updates:
+
+- `config/peers-mainnet.conf` — format: `Name|host:port|Location`
+- `config/peers-testnet.conf` — same format
+
+## Snapshot Providers
+
+Public snapshot providers are configured in `config/snapshot-providers.conf`:
+
+```
+# provider | network | url
+EOSUSA|mainnet|http://snapshots.eosusa.io/snapshots/libre/latest.zst
+EOSUSA|testnet|http://snapshots.eosusa.io/snapshots/libretestnet/latest.zst
+```
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Port conflicts:**
-
-   ```bash
-   # Check if ports are in use
-   netstat -tulpn | grep -E ':(9888|9889|9876|9877|9080|9081)'
-   ```
-
-2. **Insufficient memory:**
-
-   ```bash
-   # Check available memory
-   free -h
-   ```
-
-3. **Slow sync:**
-
-   - Ensure stable internet connection
-   - Check peer connectivity
-   - Monitor system resources
-
-4. **Container won't start:**
-   ```bash
-   # Check container logs
-   docker-compose logs libre-mainnet
-   docker-compose logs libre-testnet
-   ```
-
-### Reset Node Data
-
-⚠️ **WARNING:** This will delete all blockchain data and require full resync.
-
 ```bash
-./scripts/reset.sh
+# Check node status
+./scripts/node/status.sh
+
+# View recent logs
+./scripts/node/logs.sh -n 100
+
+# Run diagnostic checks
+./scripts/maintenance/error-recovery.sh
+
+# Validate configuration
+./scripts/setup/validate-config.sh node.conf
 ```
-
-### View Detailed Logs
-
-```bash
-# Mainnet logs
-./logs.sh mainnet
-
-# Testnet logs
-./logs.sh testnet
-
-# All logs
-docker-compose logs -f
-```
-
-## Performance Tuning
-
-### Resource Allocation
-
-The default configuration is optimized for:
-
-- **4 CPU cores** for chain processing
-- **6 HTTP threads** for API requests
-- **16GB RAM** for mainnet state
-- **8GB RAM** for testnet state
-
-### Customization
-
-Use the deployment scripts to configure:
-
-- **Network settings:** IP addresses, ports, P2P peers
-- **Performance tuning:** Thread counts, timeouts, database sizes
-- **Logging options:** Console output, error verbosity
-- **Security settings:** Startup behavior, validation
-
-For manual customization, edit the `config.ini` files directly:
-
-- `mainnet/config/config.ini` for mainnet settings
-- `testnet/config/config.ini` for testnet settings
-
-The `docker-compose.yml` file manages container configuration only.
-
-## Block Producer Configuration
-
-⚠️ **IMPORTANT**: Producer functionality is only for authorized block producers. Only enable if you have proper authorization from the Libre network.
-
-### Producer Setup
-
-1. **Configure Producer Mode:**
-
-   ```bash
-   # Interactive producer configuration
-   ./scripts/deploy-producer.sh
-   
-   # Or include in advanced deployment
-   ./scripts/deploy-advanced.sh
-   ```
-
-2. **Producer Configuration Options:**
-
-   - **Producer Account Name**: Your registered block producer account
-   - **Authentication Method**: Private key or signature provider (recommended)
-   - **Stale Production**: Enable production when not scheduled (testnet only)
-   - **API Restriction**: Limit API access to localhost for security
-   - **P2P Transaction Control**: Disable transaction acceptance via P2P
-
-3. **Security Requirements:**
-
-   ```bash
-   # Restrict API to localhost only (recommended for producers)
-   http-server-address = 127.0.0.1:9888  # Mainnet
-   http-server-address = 127.0.0.1:9889  # Testnet
-   
-   # Use signature providers instead of private keys
-   signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY
-   
-   # Disable P2P transaction acceptance
-   p2p-accept-transactions = false
-   api-accept-transactions = true
-   ```
-
-4. **Producer Status Check:**
-
-   ```bash
-   # Check producer configuration
-   ./scripts/deploy-producer.sh  # Option 3: Show current status
-   
-   # View current producer settings
-   grep -E "(producer-name|signature-provider|enable-stale)" mainnet/config/config.ini
-   ```
-
-### Producer Security Guidelines
-
-- **Key Management**: Never store private keys in plaintext. Use secure key management solutions.
-- **Network Security**: Use firewall rules to restrict access to producer nodes.
-- **API Access**: Restrict HTTP API to localhost only in production.
-- **Monitoring**: Monitor logs for any security issues or unexpected behavior.
-- **Backups**: Maintain secure backups of configuration and keys.
-- **Updates**: Keep the node software updated with latest security patches.
-
-### Producer Configuration Files
-
-Producer settings are added to the existing `config.ini` files:
-
-- **Mainnet Producer**: `mainnet/config/config.ini`
-- **Testnet Producer**: `testnet/config/config.ini`
-
-Key producer settings:
-```ini
-# Producer Plugin (enable for block production)
-plugin = eosio::producer_plugin
-plugin = eosio::producer_api_plugin
-
-# Producer Configuration
-producer-name = yourproducername
-signature-provider = YOUR_PUBLIC_KEY=KEY:YOUR_PRIVATE_KEY
-enable-stale-production = false  # true for testnet only
-
-# Security Settings for Producers
-http-server-address = 127.0.0.1:9888  # Restrict API access
-p2p-accept-transactions = false        # Disable P2P transactions
-api-accept-transactions = true         # Accept transactions via API only
-```
-
-### Lightweight Producer Mode (Snapshot-Based)
-
-For block producers who don't need full state history, use the lightweight mode that:
-- Downloads fresh snapshots from EOSUSA (https://snapshots.eosusa.io)
-- Keeps only the last 1000 blocks in memory
-- Uses minimal disk space (4GB state vs 32GB)
-- Starts quickly from snapshot (5-10 minutes)
-- Runs with tmpfs (RAM-based) storage for blocks/state
-- **Automatic snapshot management**: Creates daily snapshots and prunes old ones automatically
-
-#### Lightweight Setup Process
-
-1. **Configure Producer Keys:**
-   ```bash
-   # Choose option 3 or 4 for lightweight mode
-   ./scripts/deploy-producer.sh
-   ```
-
-2. **Download Latest Snapshot:**
-   ```bash
-   # Downloads and prepares snapshot
-   ./scripts/producer-snapshot.sh
-   # Choose option 1 for mainnet or 2 for testnet
-   ```
-
-3. **Start Lightweight Producer:**
-   ```bash
-   # Start with optimized Docker compose
-   ./scripts/start-producer.sh
-   # Or manually:
-   docker-compose -f docker/docker-compose-producer.yml up -d
-   ```
-
-#### Automatic Snapshot Management
-
-Lightweight producer containers automatically manage their own snapshots:
-
-- **Daily Creation**: New snapshots created at 00:00 UTC daily
-- **Automatic Pruning**: Old snapshots pruned at 01:00 UTC (keeps latest 1)
-- **Latest Snapshot Detection**: Container automatically uses most recent snapshot on startup
-- **No External Dependencies**: All snapshot management runs inside containers
-
-**Manual Snapshot Operations:**
-```bash
-# Create snapshot immediately
-./scripts/manage-snapshots.sh create mainnet
-
-# Check snapshot status
-./scripts/manage-snapshots.sh status
-
-# Create snapshot via API
-curl -X POST -H "Content-Type: application/json" -d '{}' http://localhost:9888/v1/producer/create_snapshot
-
-# View snapshot automation logs
-docker exec libre-mainnet-producer cat /var/log/snapshot-create.log
-docker exec libre-mainnet-producer cat /var/log/snapshot-prune.log
-```
-
-#### Lightweight Mode Benefits
-
-- **Minimal Resources**: 4-6GB RAM instead of 16GB+
-- **Fast Restarts**: Fresh from snapshot in minutes
-- **No State Accumulation**: Blocks pruned automatically
-- **RAM-Based Performance**: Uses tmpfs for temporary data
-- **Automatic Snapshot Loading**: Starts from latest network state
-
-#### Snapshot Sources
-
-The system supports multiple snapshot providers configured in `config/snapshot-providers.conf`:
-
-**Default Provider (EOSUSA):**
-- **Mainnet**: https://snapshots.eosusa.io/snapshots/libre
-- **Testnet**: https://snapshots.eosusa.io/snapshots/libretestnet
-- Format: `.bin.zst` (zstandard compressed)
-- Updated daily
-
-**Adding Custom Providers:**
-
-To add your own snapshot provider, edit `config/snapshot-providers.conf`:
-```bash
-# Format: PROVIDER_NAME|BASE_URL|PATH_PATTERN|FILE_PATTERN|COMPRESSION
-YOURPROVIDER_MAINNET|https://your-snapshots.com|/path/to/mainnet|.*\.bin\.zst$|zst
-YOURPROVIDER_TESTNET|https://your-snapshots.com|/path/to/testnet|.*\.bin\.zst$|zst
-```
-
-**Supported Compression Formats:**
-- `zst` - Zstandard (requires zstd)
-- `gz` - Gzip (requires gzip)  
-- `bz2` - Bzip2 (requires bzip2)
-- `xz` - XZ (requires xz)
-- `none` - Uncompressed
-
-**Provider Selection:**
-```bash
-# List available providers
-./scripts/producer-snapshot.sh  # Option 5: Show provider information
-
-# Select specific provider
-./scripts/producer-snapshot.sh  # Option 6: List providers and select
-```
-
-## Security Considerations
-
-- **Firewall:** Restrict access to necessary ports only
-- **Authentication:** Implement API authentication if exposed publicly
-- **Updates:** Regularly update the Docker image for security patches
-- **Backups:** Regularly backup configuration and data directories
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Documentation
-
-Comprehensive documentation is available in the `docs/` directory:
-
-- **[docs/README.md](docs/README.md)** - Documentation index and overview
-- **[docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment and configuration guide
-- **[docs/SCRIPT_UPDATES.md](docs/SCRIPT_UPDATES.md)** - Documentation of script updates and improvements
-- **[docs/DEFAULT_VALUES.md](docs/DEFAULT_VALUES.md)** - Reference for all default configuration values
-- **[docs/api/](docs/api/)** - API documentation and examples
-- **[docs/troubleshooting/](docs/troubleshooting/)** - Troubleshooting guide and common issues
-- **[docs/examples/](docs/examples/)** - Example scripts and configurations
-
-## Support
-
-For issues and questions:
-
-- Check the [troubleshooting guide](docs/troubleshooting/README.md)
-- Review [Libre blockchain documentation](https://libre.org/)
-- Open an issue on GitHub
-
-## Changelog
-
-### v2.0.0 - Block Producer Support
-
-- **Producer Functionality:** Complete block producer support
-  - `deploy-producer.sh` for producer configuration
-  - Producer plugin integration
-  - Signature provider support
-  - Security-focused defaults
-- **Lightweight Producer Mode:** Minimal resource usage for producers
-  - Snapshot-based initialization
-  - Memory-only state (4-6GB RAM vs 16GB+)
-  - tmpfs volumes for temporary data
-  - Automatic state pruning (last 1000 blocks)
-- **Automatic Snapshot Management:** Container-based snapshot automation
-  - Daily snapshot creation at 00:00 UTC
-  - Automatic snapshot pruning at 01:00 UTC (keeps latest 1)
-  - Latest snapshot auto-detection on container startup
-  - Internal cron scheduling (no external dependencies)
-  - Snapshot management via producer API
-- **Snapshot Management Scripts:** Flexible snapshot provider system
-  - `producer-snapshot.sh` for external snapshot downloads
-  - `manage-snapshots.sh` for local snapshot creation/pruning
-  - `config/snapshot-providers.conf` for provider configuration
-  - Support for multiple compression formats (zst, gz, bz2, xz)
-  - EOSUSA as default provider
-- **Enhanced Scripts:**
-  - `start-producer.sh` for lightweight producer startup
-  - `restart-producer.sh` for producer restart with snapshot options
-  - Path fixes for all scripts (work from any directory)
-  - Improved error handling and validation
-  - Added `CLAUDE.md` for AI assistance
-- **Docker Improvements:**
-  - `docker-compose-producer.yml` for optimized producer containers
-  - Memory limits and health checks
-  - Host network mode for performance
-  - Cron integration for snapshot automation
-  - Automatic latest snapshot detection in entrypoint
-  - Increased blocks tmpfs storage (4GB) for adequate space
-
-### v1.1.0 - Configuration Management
-
-- **Configuration Management:** Centralized all settings in `config.ini` files
-- **Deployment Scripts:** Added interactive configuration scripts
-  - `deploy.sh` for basic network configuration
-  - `deploy-advanced.sh` for comprehensive settings
-  - `config-template.sh` for configuration reference
-- **Redundancy Removal:** Eliminated duplicate settings between `docker-compose.yml` and `config.ini`
-- **Validation:** Added input validation and configuration checks
-- **Backup System:** Automatic backup creation with timestamps
-- **Documentation:** Updated README with new configuration process
-
-### v1.0.0 - Initial Release
-
-- Initial release
-- Libre mainnet and testnet support
-- AntelopeIO Leap v5.0.3
-- State History Plugin support
-- Comprehensive management scripts
+This project is licensed under the MIT License.

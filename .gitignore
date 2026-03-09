@@ -50,3 +50,27 @@ build/
 # Docker images (optional - uncomment if you don't want to track)
 # *.tar
 # libre-node:* 
+_tmp/
+
+# v3 Configuration (contains user-specific settings)
+node.conf
+
+# S3/rclone credentials
+s3.conf
+.rclone.conf
+
+# Generated runtime configs (output of generate-config.sh)
+# Note: mainnet/config/ and testnet/config/ are tracked as v2 reference configs
+# v3 generated configs live outside the repo (in STORAGE_PATH)
+generated/
+
+# Snapshots
+*/snapshots/
+snapshots/
+
+# BTRFS snapshot directories
+.backup-*
+
+# Caddy data
+caddy_data/
+caddy_config/
