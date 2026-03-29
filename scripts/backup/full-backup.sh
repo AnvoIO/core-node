@@ -44,7 +44,7 @@ usage() {
     echo "  --help    Show this help message"
     echo ""
     echo "The backup sequence:"
-    echo "  1. Create an chain snapshot via producer API"
+    echo "  1. Create a chain snapshot via producer API"
     echo "  2. Wait for blocks to finalize"
     echo "  3. Stop the node container"
     echo "  4. Create a read-only BTRFS snapshot"

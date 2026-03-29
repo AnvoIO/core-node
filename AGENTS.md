@@ -47,9 +47,9 @@ All scripts source from `scripts/lib/`:
 - **State-in-memory (tmpfs)** — protects SSDs; tmpfs size auto-derived from CHAIN_STATE_DB_SIZE + 10% headroom (allocated on use, not reserved). No blocks tmpfs — blocks are sequential writes, SSD-safe.
 - **One node per config** — each wizard run produces one node.conf for one node
 - **Peer lists in separate files** — `config/peers-{mainnet,testnet}.conf` for independent updates
-- **Templates use `{{PLACEHOLDER}}` syntax** — replaced by generate-config.sh using awk
+- **Templates use `{{PLACEHOLDER}}` syntax** — replaced by generate-config.sh using sed and awk
 - **30m stop_grace_period** — allows core_netd to flush state cleanly on shutdown
-- **NODEOS_COMMAND indentation** — must use 6-space indent for YAML folded style compatibility
+- **CORE_COMMAND indentation** — must use 6-space indent for YAML folded style compatibility
 - **API Gateway (OpenResty)** — optional reverse proxy with Lua-based API key auth + per-key token-bucket rate limiting. Auth logic in `config/templates/lua/auth.lua`, keys in flat file. WebSocket proxy for SHiP.
 - **Cloudflare Zero Trust** — optional `cloudflared` tunnel sidecar in docker-compose, gated behind API_GATEWAY_ENABLED. CF tunnel provides network ingress; API keys still enforced at application level.
 - **Streaming backup/restore** — `s3-push.sh` uses `tar | zstd -T0 | rclone rcat` (no intermediate files). `s3-pull.sh` uses `rclone cat | zstd -d | tar -x`. No local temp files or double-disk-space requirement.

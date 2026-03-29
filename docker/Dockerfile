@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     jq \
     zstd \
+    unzip \
     btrfs-progs \
     socat \
     gosu \

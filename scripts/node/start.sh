@@ -248,7 +248,9 @@ main() {
     echo "  Container:  ${CONTAINER_NAME}"
     echo "  Network:    ${NETWORK}"
     echo "  Role:       ${NODE_ROLE}"
-    echo "  API:        http://${BIND_IP}:${HTTP_PORT}"
+    if [[ -n "$HTTP_PORT" ]]; then
+        echo "  API:        http://${BIND_IP}:${HTTP_PORT}"
+    fi
     echo "  P2P:        ${BIND_IP}:${P2P_PORT}"
     if [[ "$API_GATEWAY_ENABLED" == "true" ]]; then
         local GATEWAY_HTTP_PORT

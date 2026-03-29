@@ -77,15 +77,15 @@ main() {
                 ;;
             -n)
                 tail_lines="${2:-100}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             --since)
                 since="${2:-}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             --container-name)
                 explicit_container="${2:-}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             -h|--help)
                 usage

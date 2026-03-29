@@ -28,15 +28,15 @@ Manage keys with `scripts/setup/manage-keys.sh` (see [Configuration](../CONFIGUR
 
 ```bash
 # Node info
-curl http://localhost:8888/v1/chain/get_info
+curl http://localhost:9888/v1/chain/get_info
 
 # Get block
-curl -X POST http://localhost:8888/v1/chain/get_block \
+curl -X POST http://localhost:9888/v1/chain/get_block \
   -H "Content-Type: application/json" \
   -d '{"block_num_or_id": 12345}'
 
 # Get account
-curl -X POST http://localhost:8888/v1/chain/get_account \
+curl -X POST http://localhost:9888/v1/chain/get_account \
   -H "Content-Type: application/json" \
   -d '{"account_name": "accountname"}'
 ```
@@ -45,28 +45,28 @@ curl -X POST http://localhost:8888/v1/chain/get_account \
 
 ```bash
 # List P2P connections
-curl http://localhost:8888/v1/net/connections
+curl http://localhost:9888/v1/net/connections
 
 # Connection count
-curl -s http://localhost:8888/v1/net/connections | jq 'length'
+curl -s http://localhost:9888/v1/net/connections | jq 'length'
 ```
 
 ## Producer API (producer role only)
 
 ```bash
 # Create snapshot
-curl -X POST http://localhost:8888/v1/producer/create_snapshot
+curl -X POST http://localhost:9888/v1/producer/create_snapshot
 
 # Schedule periodic snapshots
-curl -X POST http://localhost:8888/v1/producer/schedule_snapshot \
+curl -X POST http://localhost:9888/v1/producer/schedule_snapshot \
   -H "Content-Type: application/json" \
   -d '{"block_spacing": 1000, "start_block_num": 0, "end_block_num": 0}'
 
 # List scheduled snapshots
-curl http://localhost:8888/v1/producer/get_snapshot_requests
+curl http://localhost:9888/v1/producer/get_snapshot_requests
 
 # Cancel scheduled snapshots
-curl -X POST http://localhost:8888/v1/producer/unschedule_snapshot \
+curl -X POST http://localhost:9888/v1/producer/unschedule_snapshot \
   -H "Content-Type: application/json" \
   -d '{"request_id": 0}'
 ```
@@ -82,7 +82,7 @@ When the API gateway is enabled, connect via `ws[s]://DOMAIN:GATEWAY_SHIP_PORT` 
 const ws = new WebSocket("wss://api.example.com:8443/?api_key=YOUR_KEY");
 
 // Direct (no gateway)
-// const ws = new WebSocket("ws://localhost:8080");
+// const ws = new WebSocket("ws://localhost:9080");
 
 ws.onopen = () => {
   ws.send(JSON.stringify({
@@ -101,10 +101,10 @@ ws.onopen = () => {
 
 ```bash
 # Quick health check
-curl -sf http://localhost:8888/v1/chain/get_info > /dev/null && echo "OK" || echo "DOWN"
+curl -sf http://localhost:9888/v1/chain/get_info > /dev/null && echo "OK" || echo "DOWN"
 
 # Block age (seconds behind)
-curl -s http://localhost:8888/v1/chain/get_info | jq '
+curl -s http://localhost:9888/v1/chain/get_info | jq '
   (now - (.head_block_time | sub("T"; " ") | strptime("%Y-%m-%d %H:%M:%S") | mktime)) | floor'
 ```
 
@@ -112,4 +112,4 @@ curl -s http://localhost:8888/v1/chain/get_info | jq '
 
 - [AntelopeIO Chain API](https://docs.eosnetwork.com/docs/latest/apis/chain_api/)
 - [AntelopeIO State History API](https://docs.eosnetwork.com/docs/latest/apis/state_history_api/)
-- [Libre Network](https://libre.org/)
+- [Anvo Network](https://anvo.io/)

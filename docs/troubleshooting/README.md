@@ -31,7 +31,7 @@ docker build -t "core-node:0.1.0-alpha" -f docker/Dockerfile docker/
 
 **Port conflict:**
 ```bash
-ss -tlnp | grep :8888
+ss -tlnp | grep :9888
 # Change HTTP_PORT in node.conf and regenerate
 ```
 
@@ -46,7 +46,7 @@ The node needs a snapshot to boot when `STATE_IN_MEMORY=true`. The start script 
 
 **Check peer count:**
 ```bash
-curl -s http://localhost:8888/v1/net/connections | jq 'length'
+curl -s http://localhost:9888/v1/net/connections | jq 'length'
 ```
 
 **No peers:** Verify peer list is current. Update `config/peers-{network}.conf` and regenerate config.

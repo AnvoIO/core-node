@@ -203,9 +203,9 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 | Key | Description | Example |
 |-----|-------------|---------|
 | `BIND_IP` | IP address to bind services | `0.0.0.0` |
-| `HTTP_PORT` | HTTP API port (not used for seed role) | `8888` |
+| `HTTP_PORT` | HTTP API port (not used for seed role) | `9888` |
 | `P2P_PORT` | P2P network port | `9876` |
-| `SHIP_PORT` | State History port (full-api/full-history) | `8080` |
+| `SHIP_PORT` | State History port (full-api/full-history) | `9080` |
 
 ### Performance Tuning
 
@@ -214,7 +214,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 | `CHAIN_STATE_DB_SIZE` | Chain state DB size in MB | 16384 (producer) to 65536 (full-history) |
 | `CHAIN_THREADS` | Chain processing threads | 2-4 |
 | `HTTP_THREADS` | HTTP server threads | 2-6 |
-| `MAX_CLIENTS` | Max P2P client connections | 25-250 |
+| `MAX_CLIENTS` | Max P2P client connections | 50-250 |
 | `MAX_TRANSACTION_TIME` | Max transaction time (ms) | 30-1000 |
 
 ### State-in-Memory
@@ -299,10 +299,10 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 To run both mainnet and testnet (or multiple nodes of the same network), run the wizard once per instance with unique `CONTAINER_NAME`, `STORAGE_PATH`, and non-conflicting ports:
 
 ```bash
-# Mainnet: CONTAINER_NAME=core-mainnet, STORAGE_PATH=/data/core-mainnet, HTTP_PORT=8888
+# Mainnet: CONTAINER_NAME=core-mainnet, STORAGE_PATH=/data/core-mainnet, HTTP_PORT=9888
 ./scripts/setup/wizard.sh
 
-# Testnet: CONTAINER_NAME=core-testnet, STORAGE_PATH=/data/core-testnet, HTTP_PORT=8889
+# Testnet: CONTAINER_NAME=core-testnet, STORAGE_PATH=/data/core-testnet, HTTP_PORT=9889
 ./scripts/setup/wizard.sh
 ```
 
@@ -327,7 +327,9 @@ Public snapshot providers are configured in `config/snapshot-providers.conf`:
 ```
 # provider | network | url
 EOSUSA|mainnet|http://snapshots.eosusa.io/snapshots/libre/latest.zst
-EOSUSA|testnet|http://snapshots.eosusa.io/snapshots/libretestnet/latest.zst
+EOSUSA|testnet|http://seed01.eosusa.news/snaps/libretestnet/latest.zst
+GenerEOS|mainnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/libre/latest.bin.zst
+GenerEOS|testnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/core-testnet/latest.bin.zst
 ```
 
 ## Troubleshooting

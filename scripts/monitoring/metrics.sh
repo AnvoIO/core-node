@@ -127,13 +127,11 @@ serve_metrics() {
 
     log_info "Serving Prometheus metrics on port ${PROMETHEUS_PORT}..."
 
+    # Each connection forks a handler that regenerates metrics fresh.
+    # socat SYSTEM runs a shell for each connection; we call generate_metrics
+    # and format a proper HTTP response with correct Content-Length.
     while true; do
-        local metrics
-        metrics=$(generate_metrics)
-        local content_length=${#metrics}
-
-        echo -e "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: ${content_length}\r\n\r\n${metrics}" | \
-            socat TCP-LISTEN:${PROMETHEUS_PORT},reuseaddr,fork STDIN || true
+        socat TCP-LISTEN:"${PROMETHEUS_PORT}",reuseaddr EXEC:"${BASH_SOURCE[0]} --once-http" 2>/dev/null || true
     done
 }
 
@@ -148,6 +146,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --once) mode="once"; shift ;;
+            --once-http) mode="once-http"; shift ;;
             --serve) mode="serve"; shift ;;
             --help) show_help; exit 0 ;;
             *) CONFIG_ARG="$1"; shift ;;
@@ -165,11 +164,21 @@ main() {
     BIND_IP="$(get_config "BIND_IP" "0.0.0.0")"
     PROMETHEUS_PORT="$(get_config "PROMETHEUS_PORT" "9100")"
 
-    if [[ "$mode" == "once" ]]; then
-        generate_metrics
-    else
-        serve_metrics
-    fi
+    case "$mode" in
+        once)
+            generate_metrics
+            ;;
+        once-http)
+            # Internal mode: output a full HTTP response (used by serve_metrics via socat)
+            local metrics
+            metrics="$(generate_metrics)"
+            local content_length=${#metrics}
+            printf 'HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s' "$content_length" "$metrics"
+            ;;
+        serve)
+            serve_metrics
+            ;;
+    esac
 }
 
 main "$@"

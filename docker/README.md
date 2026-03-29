@@ -25,7 +25,7 @@ The start script (`scripts/node/start.sh`) builds the image automatically if it 
 
 `entrypoint.sh` runs as the container entrypoint:
 
-1. Ensures required directories exist (`/opt/core/{config,data,logs,data/snapshots}`)
+1. Ensures required directories exist (`/opt/core/{data/state,data/state-history,data/blocks,data/snapshots,config/protocol_features}`)
 2. Auto-detects the latest snapshot in the snapshots directory
 3. Drops privileges to the `core` user via gosu
 4. Executes the core_netd command passed as arguments
