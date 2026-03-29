@@ -215,6 +215,7 @@ signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5
 
 chain-state-db-size-mb = 1024
 wasm-runtime = core-vm-jit
+vm-oc-enable = none
 
 max-transaction-time = 30
 abi-serializer-max-time-ms = 15000
