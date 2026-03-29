@@ -40,8 +40,8 @@ RUN curl -fsSL https://rclone.org/install.sh | bash
 
 # Create core user and directories
 RUN useradd -m -s /bin/bash core \
-    && mkdir -p /opt/core/{config,data,logs} \
-    && mkdir -p /opt/core/data/{state,state-history,blocks,snapshots} \
+    && mkdir -p /opt/core/config /opt/core/data /opt/core/logs \
+    && mkdir -p /opt/core/data/state /opt/core/data/state-history /opt/core/data/blocks /opt/core/data/snapshots \
     && mkdir -p /opt/core/config/protocol_features \
     && chown -R core:core /opt/core
 

@@ -8,7 +8,7 @@ mkdir -p /opt/core/data/blocks
 mkdir -p /opt/core/data/snapshots
 mkdir -p /opt/core/config/protocol_features
 chown -R core:core /opt/core/data
-chown -R core:core /opt/core/config
+chown -R core:core /opt/core/config 2>/dev/null || true
 
 # If the first argument is core_netd, handle snapshot detection
 if [ "$1" = "core_netd" ]; then
