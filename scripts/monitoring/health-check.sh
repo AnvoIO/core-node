@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Health Check Monitor
+# Core Node — Health Check Monitor
 # =============================================================================
 # Monitors node health and sends webhook alerts when issues are detected.
 #
@@ -58,7 +58,7 @@ MIN_PEER_COUNT=2        # if fewer peers, warn
 # show_help
 # ---------------------------------------------------------------------------
 show_help() {
-    echo "Libre Node — Health Check Monitor"
+    echo "Core Node — Health Check Monitor"
     echo ""
     echo "Usage: $(basename "$0") [options] [path/to/node.conf]"
     echo ""
@@ -79,7 +79,7 @@ send_alert() {
     fi
 
     local payload
-    local alert_title="Libre Node Alert: ${CONTAINER_NAME}"
+    local alert_title="Core Node Alert: ${CONTAINER_NAME}"
 
     case "${WEBHOOK_TYPE}" in
         slack)
@@ -89,7 +89,7 @@ send_alert() {
             payload="{\"content\":\"**${alert_title}**\n${message}\"}"
             ;;
         pagerduty)
-            payload="{\"routing_key\":\"${WEBHOOK_URL}\",\"event_action\":\"trigger\",\"payload\":{\"summary\":\"${alert_title}: ${message}\",\"severity\":\"critical\",\"source\":\"libre-node\"}}"
+            payload="{\"routing_key\":\"${WEBHOOK_URL}\",\"event_action\":\"trigger\",\"payload\":{\"summary\":\"${alert_title}: ${message}\",\"severity\":\"critical\",\"source\":\"core-node\"}}"
             ;;
         generic|*)
             payload="{\"title\":\"${alert_title}\",\"message\":\"${message}\",\"severity\":\"critical\",\"timestamp\":\"$(date -Iseconds)\"}"

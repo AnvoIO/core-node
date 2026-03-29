@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 Prune (Enforce Retention Policy)
+# Core Node — S3 Prune (Enforce Retention Policy)
 # =============================================================================
 # Deletes old backups on S3, keeping only the most recent N backups.
 # Backups are sorted by name (timestamp-based, so alphabetical = chronological).
@@ -36,7 +36,7 @@ find_config() {
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 Prune (Enforce Retention Policy)"
+    echo "Core Node — S3 Prune (Enforce Retention Policy)"
     echo ""
     echo "Deletes old backups on S3, keeping the most recent N backups."
     echo ""
@@ -91,7 +91,7 @@ main() {
         esac
     done
 
-    log_header "Libre Node — S3 Prune"
+    log_header "Core Node — S3 Prune"
 
     # Load configuration
     load_config "$(find_config "$config_path")"

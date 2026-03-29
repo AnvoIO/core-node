@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Restart Node
+# Core Node — Restart Node
 # =============================================================================
-# Gracefully stops and then starts the Libre blockchain node.
+# Gracefully stops and then starts the Core blockchain node.
 #
 # Usage: restart.sh [path/to/node.conf]
 # =============================================================================
@@ -45,7 +45,7 @@ find_config() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log_header "Libre Node — Restart"
+    log_header "Core Node — Restart"
 
     # Resolve config path once and pass it to both scripts
     local config_path

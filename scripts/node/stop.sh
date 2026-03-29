@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Stop Node
+# Core Node — Stop Node
 # =============================================================================
-# Gracefully stops the Libre blockchain node container.
+# Gracefully stops the Core blockchain node container.
 #
 # Usage: stop.sh [path/to/node.conf]
 # =============================================================================
@@ -46,7 +46,7 @@ find_config() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log_header "Libre Node — Stop"
+    log_header "Core Node — Stop"
 
     # Load configuration
     local config_path

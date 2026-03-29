@@ -1,6 +1,6 @@
-# Libre Node
+# Core Node
 
-Docker-based deployment system for Libre blockchain nodes using AntelopeIO Leap v5.0.3. Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring.
+Docker-based deployment system for Core blockchain nodes using AntelopeIO Leap v5.0.3. Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring.
 
 ## Quick Start
 
@@ -77,7 +77,7 @@ wizard.sh → node.conf → generate-config.sh → config.ini
 ## Directory Structure
 
 ```
-libre-node/
+core-node/
 ├── node.conf                      # Your node configuration (single source of truth)
 ├── config/
 │   ├── peers-mainnet.conf         # Mainnet peer list (independently updatable)
@@ -195,8 +195,8 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 | `NETWORK` | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Node role (see table above) | `producer` |
 | `LEAP_VERSION` | AntelopeIO Leap version | `5.0.3` |
-| `CONTAINER_NAME` | Docker container name | `libre-mainnet-producer` |
-| `STORAGE_PATH` | Base path for all node data | `/data/libre-mainnet` |
+| `CONTAINER_NAME` | Docker container name | `core-mainnet-producer` |
+| `STORAGE_PATH` | Base path for all node data | `/data/core-mainnet` |
 
 ### Network Settings
 
@@ -299,18 +299,18 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 To run both mainnet and testnet (or multiple nodes of the same network), run the wizard once per instance with unique `CONTAINER_NAME`, `STORAGE_PATH`, and non-conflicting ports:
 
 ```bash
-# Mainnet: CONTAINER_NAME=libre-mainnet, STORAGE_PATH=/data/libre-mainnet, HTTP_PORT=8888
+# Mainnet: CONTAINER_NAME=core-mainnet, STORAGE_PATH=/data/core-mainnet, HTTP_PORT=8888
 ./scripts/setup/wizard.sh
 
-# Testnet: CONTAINER_NAME=libre-testnet, STORAGE_PATH=/data/libre-testnet, HTTP_PORT=8889
+# Testnet: CONTAINER_NAME=core-testnet, STORAGE_PATH=/data/core-testnet, HTTP_PORT=8889
 ./scripts/setup/wizard.sh
 ```
 
 The wizard detects ports already in use on the host and warns before accepting a conflicting port. All operations accept a config path to target the correct instance:
 
 ```bash
-./scripts/node/start.sh /data/libre-mainnet/config/node.conf
-./scripts/node/start.sh /data/libre-testnet/config/node.conf
+./scripts/node/start.sh /data/core-mainnet/config/node.conf
+./scripts/node/start.sh /data/core-testnet/config/node.conf
 ```
 
 ## Peer Lists

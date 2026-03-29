@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Schedule Recurring Snapshots
+# Core Node — Schedule Recurring Snapshots
 # =============================================================================
 # Schedules, lists, or cancels recurring snapshots via the Leap producer API.
 #

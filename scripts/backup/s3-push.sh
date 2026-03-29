@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 Push (Upload Backup)
+# Core Node — S3 Push (Upload Backup)
 # =============================================================================
 # Stream-compresses and uploads data from a BTRFS snapshot (or any source
 # directory) to S3 using rclone.
@@ -37,7 +37,7 @@ find_config() {
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 Push (Upload Backup)"
+    echo "Core Node — S3 Push (Upload Backup)"
     echo ""
     echo "Stream-compresses and uploads data to S3 using rclone."
     echo ""

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 Pull (Download Backup)
+# Core Node — S3 Pull (Download Backup)
 # =============================================================================
 # Downloads and restores a backup from S3. If no backup name is given, the
 # latest available backup is used.
@@ -37,7 +37,7 @@ find_config() {
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 Pull (Download Backup)"
+    echo "Core Node — S3 Pull (Download Backup)"
     echo ""
     echo "Downloads and restores a backup from S3."
     echo ""
@@ -86,7 +86,7 @@ main() {
         esac
     done
 
-    log_header "Libre Node — S3 Pull"
+    log_header "Core Node — S3 Pull"
 
     # Load configuration
     load_config "$(find_config "$config_path")"

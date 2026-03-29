@@ -105,7 +105,7 @@ Checks: required keys (role-dependent), valid network/role values, IP format, po
    S3_ENABLED=true
    S3_REMOTE=myremote
    S3_BUCKET=mybucket
-   S3_PREFIX=libre-mainnet/
+   S3_PREFIX=core-mainnet/
    S3_ARCHIVE_TYPE=full
    ```
 3. Run a full backup: `./scripts/backup/full-backup.sh`

@@ -23,10 +23,10 @@
 **Container not found:**
 ```bash
 # Check if image exists
-docker images | grep libre-node
+docker images | grep core-node
 
 # Rebuild if needed
-docker build -t "libre-node:5.0.3" -f docker/Dockerfile docker/
+docker build -t "core-node:5.0.3" -f docker/Dockerfile docker/
 ```
 
 **Port conflict:**
@@ -83,7 +83,7 @@ btrfs scrub start /data
 
 **Snapshot failed:** Ensure storage path is on a BTRFS volume:
 ```bash
-stat -f -c %T /data/libre-mainnet
+stat -f -c %T /data/core-mainnet
 # Should output "btrfs"
 ```
 
@@ -105,7 +105,7 @@ grep S3_ node.conf
 Certificates are managed via certbot (external to the gateway). If TLS fails:
 ```bash
 # Check gateway logs
-docker logs libre-mainnet-full-api-gateway
+docker logs core-mainnet-full-api-gateway
 
 # Renew certificates
 certbot renew

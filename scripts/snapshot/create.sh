@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Create Snapshot
+# Core Node — Create Snapshot
 # =============================================================================
 # Creates an EOSIO snapshot from a running node via the Leap producer HTTP API.
 #

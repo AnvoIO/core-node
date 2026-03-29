@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Error Diagnosis & Automated Recovery
+# Core Node — Error Diagnosis & Automated Recovery
 # =============================================================================
 # Analyzes node state, detects common failure modes, and attempts automated
 # recovery when possible.
@@ -55,7 +55,7 @@ find_config() {
 # show_help
 # ---------------------------------------------------------------------------
 show_help() {
-    echo "Libre Node — Error Diagnosis & Automated Recovery"
+    echo "Core Node — Error Diagnosis & Automated Recovery"
     echo ""
     echo "Usage: $(basename "$0") [/path/to/node.conf] [OPTIONS]"
     echo ""
@@ -66,7 +66,7 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  $(basename "$0") --diagnose"
-    echo "  $(basename "$0") /srv/libre/node.conf --fix"
+    echo "  $(basename "$0") /srv/core/node.conf --fix"
 }
 
 # ---------------------------------------------------------------------------

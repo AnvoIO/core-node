@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Node Status
+# Core Node — Node Status
 # =============================================================================
-# Displays the current status of the Libre blockchain node, including
+# Displays the current status of the Core blockchain node, including
 # container state, chain info, peer count, and API endpoint.
 #
 # Usage: status.sh [path/to/node.conf]
@@ -122,7 +122,7 @@ main() {
 
     # Display formatted status
     echo ""
-    echo "Libre Node Status"
+    echo "Core Node Status"
     echo "================="
     echo "  Container:    ${CONTAINER_NAME} (${container_status})"
     echo "  Network:      ${NETWORK}"

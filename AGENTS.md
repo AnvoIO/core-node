@@ -4,7 +4,7 @@ Guidance for AI coding assistants working on this repository.
 
 ## Project Overview
 
-Docker-based deployment system for Libre blockchain nodes (mainnet/testnet) using AntelopeIO Leap v5.0.3. A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, nodeos config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates.
+Docker-based deployment system for Core blockchain nodes (mainnet/testnet) using AntelopeIO Leap v5.0.3. A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, nodeos config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates.
 
 ## Architecture
 

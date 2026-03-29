@@ -1,4 +1,4 @@
-# Libre Blockchain Node Dockerfile — v3
+# Core Blockchain Node Dockerfile — v3
 # Based on AntelopeIO Leap
 # Built for x86_64/amd64 platform
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Prune Old Snapshots
+# Core Node — Prune Old Snapshots
 # =============================================================================
 # Removes old local snapshots beyond the configured retention count.
 #

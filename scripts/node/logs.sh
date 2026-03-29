@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Log Viewer
+# Core Node — Log Viewer
 # =============================================================================
-# Displays logs from the Libre blockchain node container using docker compose.
+# Displays logs from the Core blockchain node container using docker compose.
 #
 # Usage: logs.sh [path/to/node.conf] [-f] [-n NUM] [--since DURATION]
 #        logs.sh --container-name NAME [-f] [-n NUM] [--since DURATION]

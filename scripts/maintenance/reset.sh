@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Full Node Reset
+# Core Node — Full Node Reset
 # =============================================================================
 # Stops the node and removes all blockchain data. Optionally removes snapshots,
 # logs, and configuration. Requires confirmation for each destructive step.

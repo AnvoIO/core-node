@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Network-Specific Default Values
+# Core Node — Network-Specific Default Values
 # =============================================================================
 # Provides chain IDs, default ports, genesis JSON, plugin lists, resource
 # defaults, and tmpfs sizing for mainnet and testnet.

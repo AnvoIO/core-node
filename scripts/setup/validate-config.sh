@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Configuration Validator
+# Core Node — Configuration Validator
 # =============================================================================
 # Validates a node.conf file for completeness and correctness.
 #

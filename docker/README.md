@@ -10,7 +10,7 @@ The Dockerfile builds a node image based on Ubuntu 22.04 with:
 Build argument `LEAP_VERSION` controls the Leap version (default: `5.0.3`).
 
 ```bash
-docker build -t libre-node:5.0.3 -f docker/Dockerfile docker/
+docker build -t core-node:5.0.3 -f docker/Dockerfile docker/
 ```
 
 The start script (`scripts/node/start.sh`) builds the image automatically if it doesn't exist.

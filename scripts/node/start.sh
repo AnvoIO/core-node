@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Start Node
+# Core Node — Start Node
 # =============================================================================
-# Starts the Libre blockchain node container, building the Docker image and
+# Starts the Core blockchain node container, building the Docker image and
 # restoring a snapshot if needed.
 #
 # Usage: start.sh [path/to/node.conf]
@@ -117,7 +117,7 @@ wait_for_api() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log_header "Libre Node — Start"
+    log_header "Core Node — Start"
 
     # Load configuration
     local config_path
@@ -160,9 +160,9 @@ main() {
     fi
 
     # Check if Docker image exists; build if missing
-    if [[ -z "$(docker images -q "libre-node:${LEAP_VERSION}" 2>/dev/null)" ]]; then
-        log_info "Building Docker image libre-node:${LEAP_VERSION}..."
-        docker build -t "libre-node:${LEAP_VERSION}" \
+    if [[ -z "$(docker images -q "core-node:${LEAP_VERSION}" 2>/dev/null)" ]]; then
+        log_info "Building Docker image core-node:${LEAP_VERSION}..."
+        docker build -t "core-node:${LEAP_VERSION}" \
             -f "${PROJECT_DIR}/docker/Dockerfile" \
             "${PROJECT_DIR}/docker/"
     fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Restore from Snapshot
+# Core Node — Restore from Snapshot
 # =============================================================================
 # Restores a node from a snapshot. Supports multiple snapshot sources:
 #   local files, S3, public providers, or a direct URL.

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Full Backup
+# Core Node — Full Backup
 # =============================================================================
 # Orchestrates a complete node backup using BTRFS snapshots and S3 upload.
 # Stops the node briefly to create a consistent filesystem snapshot, then
@@ -34,7 +34,7 @@ find_config() {
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — Full Backup"
+    echo "Core Node — Full Backup"
     echo ""
     echo "Orchestrates a complete node backup using BTRFS snapshots and S3 upload."
     echo ""
@@ -74,7 +74,7 @@ main() {
         esac
     done
 
-    log_header "Libre Node — Full Backup"
+    log_header "Core Node — Full Backup"
 
     # Load configuration
     load_config "$(find_config "$config_path")"

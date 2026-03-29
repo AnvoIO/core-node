@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Configuration Generator
+# Core Node — Configuration Generator
 # =============================================================================
 # Reads a node.conf file and generates all runtime configuration files:
 #   - config.ini          (nodeos configuration)
@@ -302,7 +302,7 @@ log_header "Generating docker-compose.yml"
 COMPOSE_TEMPLATE="$(cat "${TEMPLATE_DIR}/docker-compose.yml.tmpl")"
 
 # Build IMAGE_NAME
-IMAGE_NAME="libre-node:${LEAP_VERSION}"
+IMAGE_NAME="core-node:${LEAP_VERSION}"
 
 # Build NODEOS_COMMAND
 NODEOS_COMMAND="      nodeos

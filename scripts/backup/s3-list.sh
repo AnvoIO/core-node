@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 List Backups
+# Core Node — S3 List Backups
 # =============================================================================
 # Lists available remote backups stored on S3, including metadata from each
 # backup's manifest file.
@@ -33,7 +33,7 @@ find_config() {
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 List Backups"
+    echo "Core Node — S3 List Backups"
     echo ""
     echo "Lists available remote backups stored on S3."
     echo ""

@@ -1,6 +1,6 @@
 # API Reference
 
-Libre nodes expose the standard AntelopeIO HTTP API. The port and bind IP are configured via `HTTP_PORT` and `BIND_IP` in `node.conf`.
+Core nodes expose the standard AntelopeIO HTTP API. The port and bind IP are configured via `HTTP_PORT` and `BIND_IP` in `node.conf`.
 
 Seed nodes (`NODE_ROLE=seed`) do not expose an HTTP API.
 
