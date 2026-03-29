@@ -36,6 +36,35 @@ CONFIG_FILE=""
 # Functions
 # ---------------------------------------------------------------------------
 
+# find_config ["explicit_path"]
+# Locates node.conf by checking: explicit argument → $PWD → $PROJECT_DIR.
+# Outputs the absolute path on success, returns 1 on failure.
+find_config() {
+    local explicit_path="${1:-}"
+
+    if [[ -n "$explicit_path" ]]; then
+        if [[ -f "$explicit_path" ]]; then
+            echo "$explicit_path"
+            return 0
+        fi
+        log_error "Specified config not found: ${explicit_path}"
+        return 1
+    fi
+
+    if [[ -f "${PWD}/node.conf" ]]; then
+        echo "${PWD}/node.conf"
+        return 0
+    fi
+
+    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
+        echo "${PROJECT_DIR}/node.conf"
+        return 0
+    fi
+
+    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
+    return 1
+}
+
 # load_config "path/to/node.conf"
 # Sources the config file into the environment and records the path for
 # subsequent get/set/remove operations.
@@ -72,7 +101,7 @@ get_config() {
     fi
 
     local value
-    value="$(grep -E "^${key}=" "$CONFIG_FILE" 2>/dev/null | tail -n1 | cut -d'=' -f2-)"
+    value="$(grep "^${key}=" "$CONFIG_FILE" 2>/dev/null | tail -n1 | cut -d'=' -f2-)"
 
     if [[ -n "$value" ]]; then
         echo "$value"
@@ -93,9 +122,11 @@ set_config() {
         return 1
     fi
 
-    if grep -qE "^${key}=" "$CONFIG_FILE" 2>/dev/null; then
-        # Replace existing line — use a separator that won't collide with values.
-        sed -i "s|^${key}=.*|${key}=${value}|" "$CONFIG_FILE"
+    if grep -qF "${key}=" "$CONFIG_FILE" 2>/dev/null && grep -q "^${key}=" "$CONFIG_FILE" 2>/dev/null; then
+        # Escape sed special characters in value (|, &, \, /)
+        local escaped_value
+        escaped_value="$(printf '%s' "$value" | sed 's/[|&/\]/\\&/g')"
+        sed -i "s|^${key}=.*|${key}=${escaped_value}|" "$CONFIG_FILE"
         log_debug "Updated ${key} in ${CONFIG_FILE}"
     else
         echo "${key}=${value}" >> "$CONFIG_FILE"

@@ -15,34 +15,7 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 source "${SCRIPT_DIR}/../lib/network-defaults.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # download_snapshot — try public providers for the given network

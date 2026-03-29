@@ -20,34 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # show_help
@@ -107,7 +80,7 @@ generate_metrics() {
         # Peer count
         local connections peer_count=0
         if connections=$(curl -sf --max-time 5 "${api_url}/v1/net/connections" 2>/dev/null); then
-            peer_count=$(echo "$connections" | grep -c '"peer"' || echo 0)
+            peer_count=$(echo "$connections" | jq 'length' 2>/dev/null || echo 0)
         fi
         output+="# HELP core_node_peer_count Number of connected peers\n"
         output+="# TYPE core_node_peer_count gauge\n"

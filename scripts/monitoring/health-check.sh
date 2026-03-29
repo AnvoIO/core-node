@@ -19,34 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # Thresholds
@@ -137,7 +110,7 @@ check_health() {
             local connections
             if connections=$(curl -sf --max-time 10 "${api_url}/v1/net/connections" 2>/dev/null); then
                 local peer_count
-                peer_count=$(echo "$connections" | grep -c '"peer"' || echo "0")
+                peer_count=$(echo "$connections" | jq 'length' 2>/dev/null || echo "0")
                 if [[ $peer_count -lt $MIN_PEER_COUNT ]]; then
                     errors+=("Only ${peer_count} peers connected (minimum: ${MIN_PEER_COUNT})")
                 fi

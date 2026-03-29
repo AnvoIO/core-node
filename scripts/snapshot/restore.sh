@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # =============================================================================
-# Core Node — Restore from Snapshot
+# Core Node — Download Snapshot
 # =============================================================================
-# Restores a node from a snapshot. Supports multiple snapshot sources:
+# Downloads a snapshot for node bootstrapping. Supports multiple sources:
 #   local files, S3, public providers, or a direct URL.
+# The downloaded snapshot is placed in the snapshots directory; the entrypoint
+# auto-detects it on next start if no existing state is present.
 #
 # Usage:
 #   restore.sh [/path/to/node.conf] [OPTIONS]
@@ -31,30 +33,7 @@ source "${SCRIPT_DIR}/../lib/config-utils.sh"
 # shellcheck source=../lib/network-defaults.sh
 source "${SCRIPT_DIR}/../lib/network-defaults.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf from argument, $PWD, or $PROJECT_DIR
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_arg="${1:-}"
-
-    if [[ -n "$config_arg" && -f "$config_arg" ]]; then
-        echo "$config_arg"
-        return 0
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "Cannot find node.conf. Provide it as an argument, or ensure it exists in \$PWD or ${PROJECT_DIR}."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # find_local_snapshot — return path to latest local .bin snapshot

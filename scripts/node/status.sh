@@ -15,34 +15,7 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 source "${SCRIPT_DIR}/../lib/network-defaults.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # format_age — convert seconds to a human-readable age string
@@ -69,6 +42,8 @@ format_age() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
+    require_command "docker"
+
     # Load configuration
     local config_path
     config_path="$(find_config "${1:-}")"
@@ -97,10 +72,10 @@ main() {
     if [[ "$container_status" == "running" && "$NODE_ROLE" != "seed" ]]; then
         local chain_info
         if chain_info="$(curl -sf "http://localhost:${HTTP_PORT}/v1/chain/get_info" 2>/dev/null)"; then
-            head_block_num="$(echo "$chain_info" | grep -o '"head_block_num":[0-9]*' | cut -d: -f2)"
-            head_block_time="$(echo "$chain_info" | grep -o '"head_block_time":"[^"]*"' | cut -d'"' -f4)"
-            lib="$(echo "$chain_info" | grep -o '"last_irreversible_block_num":[0-9]*' | cut -d: -f2)"
-            server_version="$(echo "$chain_info" | grep -o '"server_version_string":"[^"]*"' | cut -d'"' -f4)"
+            head_block_num="$(echo "$chain_info" | jq -r '.head_block_num // empty')"
+            head_block_time="$(echo "$chain_info" | jq -r '.head_block_time // empty')"
+            lib="$(echo "$chain_info" | jq -r '.last_irreversible_block_num // empty')"
+            server_version="$(echo "$chain_info" | jq -r '.server_version_string // empty')"
 
             # Calculate head block age
             if [[ -n "$head_block_time" ]]; then
@@ -116,7 +91,7 @@ main() {
         # Query peer count
         local connections
         if connections="$(curl -sf "http://localhost:${HTTP_PORT}/v1/net/connections" 2>/dev/null)"; then
-            peer_count="$(echo "$connections" | grep -o '"connecting":false' | wc -l)"
+            peer_count="$(echo "$connections" | jq '[.[] | select(.is_bp_peer or (.last_handshake.agent != ""))] | length' 2>/dev/null || echo 0)"
         fi
     fi
 

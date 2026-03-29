@@ -64,6 +64,7 @@ RESTART_POLICY=unless-stopped
 CHAIN_STATE_DB_SIZE=32768
 CHAIN_THREADS=4
 HTTP_THREADS=6
+NET_THREADS=4
 MAX_CLIENTS=200
 MAX_TRANSACTION_TIME=1000
 LOG_PROFILE=production
@@ -150,6 +151,13 @@ if [[ -f "$CONFIG_INI" ]]; then
         fail "config.ini: chain-state-db-size incorrect"
     fi
 
+    # Net threads
+    if grep -q 'net-threads = 4' "$CONFIG_INI"; then
+        pass "config.ini: net-threads correct"
+    else
+        fail "config.ini: net-threads incorrect"
+    fi
+
     # Peer addresses section exists (peers are empty when PEERS key is not set,
     # which is correct — the wizard populates PEERS from peer config files)
     if grep -q 'P2P Peer Addresses' "$CONFIG_INI"; then
@@ -233,6 +241,7 @@ RESTART_POLICY=on-failure
 CHAIN_STATE_DB_SIZE=16384
 CHAIN_THREADS=2
 HTTP_THREADS=2
+NET_THREADS=2
 MAX_CLIENTS=50
 MAX_TRANSACTION_TIME=30
 LOG_PROFILE=standard
@@ -322,6 +331,7 @@ RESTART_POLICY=unless-stopped
 CHAIN_STATE_DB_SIZE=32768
 CHAIN_THREADS=4
 HTTP_THREADS=2
+NET_THREADS=4
 MAX_CLIENTS=250
 MAX_TRANSACTION_TIME=1000
 LOG_PROFILE=production
