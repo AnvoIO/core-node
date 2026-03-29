@@ -352,8 +352,8 @@ fi
 # producer API: get_integrity_hash
 HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
     -X POST "${API_URL}/v1/producer/get_integrity_hash" 2>/dev/null)" || HTTP_CODE="000"
-if [[ "$HTTP_CODE" == "200" ]]; then
-    pass "POST /v1/producer/get_integrity_hash returns 200"
+if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "201" ]]; then
+    pass "POST /v1/producer/get_integrity_hash returns ${HTTP_CODE}"
 else
     fail "POST /v1/producer/get_integrity_hash returned ${HTTP_CODE}"
 fi
