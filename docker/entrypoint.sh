@@ -31,7 +31,23 @@ if [ "$1" = "core_netd" ]; then
             done
 
             if [ "$SNAPSHOT_FOUND" = "false" ]; then
-                set -- "$@" --snapshot "$LATEST_SNAPSHOT"
+                # --snapshot is incompatible with --genesis-json (snapshot
+                # already contains genesis data). Strip --genesis-json and
+                # its value from the arguments.
+                NEW_ARGS=()
+                SKIP_NEXT=false
+                for arg in "$@"; do
+                    if [ "$SKIP_NEXT" = "true" ]; then
+                        SKIP_NEXT=false
+                        continue
+                    fi
+                    if [ "$arg" = "--genesis-json" ]; then
+                        SKIP_NEXT=true
+                        continue
+                    fi
+                    NEW_ARGS+=("$arg")
+                done
+                set -- "${NEW_ARGS[@]}" --snapshot "$LATEST_SNAPSHOT"
             fi
         else
             echo "No state or snapshots found. Node will sync from genesis."
