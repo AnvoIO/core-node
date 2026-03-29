@@ -125,7 +125,7 @@ main() {
     load_config "$config_path"
 
     # Read key values
-    local NETWORK NODE_ROLE CONTAINER_NAME STORAGE_PATH LEAP_VERSION
+    local NETWORK NODE_ROLE CONTAINER_NAME STORAGE_PATH CORE_VERSION
     local STATE_IN_MEMORY HTTP_PORT SNAPSHOT_INTERVAL BIND_IP P2P_PORT
     local S3_ENABLED
 
@@ -133,7 +133,7 @@ main() {
     NODE_ROLE="$(get_config "NODE_ROLE")"
     CONTAINER_NAME="$(get_config "CONTAINER_NAME")"
     STORAGE_PATH="$(get_config "STORAGE_PATH")"
-    LEAP_VERSION="$(get_config "LEAP_VERSION" "$RECOMMENDED_LEAP_VERSION")"
+    CORE_VERSION="$(get_config "CORE_VERSION" "$RECOMMENDED_CORE_VERSION")"
     STATE_IN_MEMORY="$(get_config "STATE_IN_MEMORY" "false")"
     HTTP_PORT="$(get_config "HTTP_PORT")"
     P2P_PORT="$(get_config "P2P_PORT")"
@@ -160,9 +160,10 @@ main() {
     fi
 
     # Check if Docker image exists; build if missing
-    if [[ -z "$(docker images -q "core-node:${LEAP_VERSION}" 2>/dev/null)" ]]; then
-        log_info "Building Docker image core-node:${LEAP_VERSION}..."
-        docker build -t "core-node:${LEAP_VERSION}" \
+    if [[ -z "$(docker images -q "core-node:${CORE_VERSION}" 2>/dev/null)" ]]; then
+        log_info "Building Docker image core-node:${CORE_VERSION}..."
+        docker build -t "core-node:${CORE_VERSION}" \
+            --build-arg CORE_VERSION="${CORE_VERSION}" \
             -f "${PROJECT_DIR}/docker/Dockerfile" \
             "${PROJECT_DIR}/docker/"
     fi

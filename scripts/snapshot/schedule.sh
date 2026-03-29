@@ -3,7 +3,7 @@
 # =============================================================================
 # Core Node — Schedule Recurring Snapshots
 # =============================================================================
-# Schedules, lists, or cancels recurring snapshots via the Leap producer API.
+# Schedules, lists, or cancels recurring snapshots via the producer API.
 #
 # Usage:
 #   schedule.sh [/path/to/node.conf] [OPTIONS]

@@ -19,7 +19,7 @@
 # node.conf
 NETWORK=mainnet
 NODE_ROLE=full-api
-LEAP_VERSION=5.0.3
+CORE_VERSION=0.1.0-alpha
 CONTAINER_NAME=core-mainnet-api
 BIND_IP=0.0.0.0
 HTTP_PORT=8888

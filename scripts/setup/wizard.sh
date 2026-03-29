@@ -32,7 +32,7 @@ NON_INTERACTIVE=false
 
 # Required keys that mark a config as "complete"
 REQUIRED_KEYS=(
-    NETWORK NODE_ROLE LEAP_VERSION BIND_IP P2P_PORT
+    NETWORK NODE_ROLE CORE_VERSION BIND_IP P2P_PORT
     STORAGE_PATH STATE_IN_MEMORY SNAPSHOT_INTERVAL SNAPSHOT_RETENTION
     LOG_PROFILE API_GATEWAY_ENABLED FIREWALL_ENABLED WEBHOOK_ENABLED
     PROMETHEUS_ENABLED AGENT_NAME CONTAINER_NAME RESTART_POLICY
@@ -181,19 +181,19 @@ section_node_role() {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Leap version
+# 3. Core version
 # ---------------------------------------------------------------------------
-section_leap_version() {
-    log_header "Leap Version"
+section_core_version() {
+    log_header "Core Version"
 
     local prev
-    prev="$(get_config LEAP_VERSION "")"
+    prev="$(get_config CORE_VERSION "")"
 
     # Attempt to fetch releases from GitHub
     local -a versions=()
     local github_json=""
     github_json="$(curl -s --max-time 10 \
-        "https://api.github.com/repos/AntelopeIO/leap/releases" 2>/dev/null)" || true
+        "https://api.github.com/repos/AnvoIO/core/releases" 2>/dev/null)" || true
 
     if [[ -n "$github_json" ]]; then
         local -a raw_tags=()
@@ -226,12 +226,12 @@ section_leap_version() {
     local default_idx=1
 
     # Always include the recommended version
-    choices+=("${RECOMMENDED_LEAP_VERSION} (recommended)")
+    choices+=("${RECOMMENDED_CORE_VERSION} (recommended)")
 
     # Add GitHub versions that differ from recommended
     local added=0
     for v in "${versions[@]}"; do
-        [[ "$v" == "$RECOMMENDED_LEAP_VERSION" ]] && continue
+        [[ "$v" == "$RECOMMENDED_CORE_VERSION" ]] && continue
         if [[ $added -eq 0 ]]; then
             choices+=("${v} (latest)")
         else
@@ -253,14 +253,14 @@ section_leap_version() {
     fi
 
     local selection
-    selection="$(ask_choice "Select Leap version to install:" choices "$default_idx")"
+    selection="$(ask_choice "Select Core version to install:" choices "$default_idx")"
 
     # Extract the version number (first space-delimited token)
     local version
     version="$(echo "$selection" | awk '{print $1}')"
 
-    set_config LEAP_VERSION "$version"
-    log_success "Leap version set to ${version}"
+    set_config CORE_VERSION "$version"
+    log_success "Core version set to ${version}"
 }
 
 # ---------------------------------------------------------------------------
@@ -1271,7 +1271,7 @@ main() {
 
     section_network
     section_node_role
-    section_leap_version
+    section_core_version
     section_bind_ip
     section_ports
     section_peers

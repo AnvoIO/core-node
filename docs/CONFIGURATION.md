@@ -8,7 +8,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets these int
 |-----|----------|-------------|---------|
 | `NETWORK` | Yes | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Yes | `producer`, `seed`, `light-api`, `full-api`, `full-history` | `producer` |
-| `LEAP_VERSION` | Yes | AntelopeIO Leap version | `5.0.3` |
+| `CORE_VERSION` | Yes | AnvoIO Core version | `0.1.0-alpha` |
 | `CONTAINER_NAME` | Yes | Docker container name | `core-mainnet-producer` |
 | `AGENT_NAME` | Yes | Identifier for alerts/metrics | `core-mainnet` |
 | `STORAGE_PATH` | Yes | Base path for node data (must be BTRFS) | `/data/core-mainnet` |
@@ -49,7 +49,7 @@ tmpfs is allocated on actual use, not reserved. A 22GB tmpfs with 10GB used only
 
 | Key | Required | Description | Default |
 |-----|----------|-------------|---------|
-| `SNAPSHOT_INTERVAL` | Yes | Blocks between EOSIO snapshots | `1000` |
+| `SNAPSHOT_INTERVAL` | Yes | Blocks between chain snapshots | `1000` |
 | `SNAPSHOT_RETENTION` | Yes | Number of local snapshots to keep | `5` |
 | `CUSTOM_SNAPSHOT_URL` | No | URL for snapshot restore fallback (used by `restore.sh` auto-detect) | |
 

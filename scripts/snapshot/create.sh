@@ -3,7 +3,7 @@
 # =============================================================================
 # Core Node — Create Snapshot
 # =============================================================================
-# Creates an EOSIO snapshot from a running node via the Leap producer HTTP API.
+# Creates a chain snapshot from a running node via the producer HTTP API.
 #
 # Usage:
 #   create.sh [/path/to/node.conf] [--prune]

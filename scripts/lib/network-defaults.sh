@@ -35,9 +35,9 @@ fi
 _NETWORK_DEFAULTS_SH_LOADED="true"
 
 # ---------------------------------------------------------------------------
-# Recommended Leap version (update when a new version is tested)
+# Recommended Core version (update when a new version is tested)
 # ---------------------------------------------------------------------------
-RECOMMENDED_LEAP_VERSION="5.0.3"
+RECOMMENDED_CORE_VERSION="0.1.0-alpha"
 
 # ---------------------------------------------------------------------------
 # get_chain_id "network"

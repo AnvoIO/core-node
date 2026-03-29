@@ -6,7 +6,7 @@ Seed nodes (`NODE_ROLE=seed`) do not expose an HTTP API.
 
 ## API Gateway
 
-When `API_GATEWAY_ENABLED=true`, an OpenResty reverse proxy sits in front of the nodeos API and provides:
+When `API_GATEWAY_ENABLED=true`, an OpenResty reverse proxy sits in front of the core_netd API and provides:
 
 - **TLS termination** (optional, via Let's Encrypt)
 - **API key authentication** — pass `X-API-Key` header or `?api_key=` query parameter

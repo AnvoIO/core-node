@@ -44,7 +44,7 @@ usage() {
     echo "  --help    Show this help message"
     echo ""
     echo "The backup sequence:"
-    echo "  1. Create an EOSIO snapshot via producer API"
+    echo "  1. Create an chain snapshot via producer API"
     echo "  2. Wait for blocks to finalize"
     echo "  3. Stop the node container"
     echo "  4. Create a read-only BTRFS snapshot"
@@ -137,17 +137,17 @@ main() {
     log_info "Starting full backup: ${BACKUP_TS}"
     log_info "Network: ${NETWORK} | Role: ${NODE_ROLE:-unknown} | Storage: ${STORAGE_PATH}"
 
-    # Step 1: Create EOSIO snapshot
-    log_info "Step 1/6: Creating EOSIO snapshot..."
+    # Step 1: Create chain snapshot
+    log_info "Step 1/6: Creating chain snapshot..."
     curl -sf -X POST "http://${api_host}:${HTTP_PORT}/v1/producer/create_snapshot" || {
-        log_warn "Could not create EOSIO snapshot (producer_api_plugin may not be enabled). Continuing..."
+        log_warn "Could not create chain snapshot (producer_api_plugin may not be enabled). Continuing..."
     }
 
     # Step 2: Wait for blocks to finalize
     log_info "Step 2/6: Waiting 30 seconds for block finalization..."
     sleep 30
 
-    # Step 3: Stop nodeos
+    # Step 3: Stop core_netd
     log_info "Step 3/6: Stopping node..."
     docker compose -f "${STORAGE_PATH}/config/docker-compose.yml" stop
 
@@ -159,7 +159,7 @@ main() {
         exit 1
     }
 
-    # Step 5: Start nodeos back up immediately
+    # Step 5: Start core_netd back up immediately
     log_info "Step 5/6: Starting node..."
     docker compose -f "${STORAGE_PATH}/config/docker-compose.yml" up -d
     log_success "Node restarted. Downtime was minimal."

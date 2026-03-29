@@ -17,7 +17,7 @@ The wizard walks through all configuration sections:
 
 1. **Network** — mainnet or testnet
 2. **Node role** — producer, seed, light-api, full-api, full-history
-3. **Leap version** — queries GitHub for available releases, recommends 5.0.3
+3. **Core version** — queries GitHub for available releases, recommends 0.1.0-alpha
 4. **Container name** — Docker container name
 5. **Bind IP** — auto-detects network interfaces for selection
 6. **Ports** — HTTP, P2P, SHiP (role-dependent)
@@ -44,7 +44,7 @@ Generated files are placed in `$STORAGE_PATH/config/`:
 
 | File | Description |
 |------|-------------|
-| `config.ini` | nodeos runtime configuration |
+| `config.ini` | core_netd runtime configuration |
 | `docker-compose.yml` | Container definition with volumes, networking, health checks |
 | `genesis.json` | Chain genesis data |
 | `logging.json` | Logging profile configuration |
@@ -111,7 +111,7 @@ Checks: required keys (role-dependent), valid network/role values, IP format, po
 3. Run a full backup: `./scripts/backup/full-backup.sh`
 
 The full backup process:
-1. Creates an EOSIO snapshot (chain state checkpoint)
+1. Creates an chain snapshot (chain state checkpoint)
 2. Waits 30 seconds for flush
 3. Stops the node
 4. Takes a read-only BTRFS filesystem snapshot

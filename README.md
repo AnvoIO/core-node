@@ -1,6 +1,6 @@
 # Core Node
 
-Docker-based deployment system for Core blockchain nodes using AntelopeIO Leap v5.0.3. Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring.
+Docker-based deployment system for Core blockchain nodes using [AnvoIO Core](https://github.com/AnvoIO/core). Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring. Multi-arch: runs on both x86_64 and ARM64 (Apple Silicon).
 
 ## Quick Start
 
@@ -12,7 +12,7 @@ Docker-based deployment system for Core blockchain nodes using AntelopeIO Leap v
 ./scripts/node/start.sh
 ```
 
-The wizard walks through all configuration options and writes a `node.conf` file. All Docker, nodeos, and operational configs are generated from that single file.
+The wizard walks through all configuration options and writes a `node.conf` file. All Docker, core_netd, and operational configs are generated from that single file.
 
 For non-interactive setup, edit `node.conf` directly and run:
 
@@ -65,7 +65,7 @@ wizard.sh → node.conf → generate-config.sh → config.ini
 ### Key Features
 
 - **State-in-memory (tmpfs)**: Chain state stored in RAM to protect SSDs from write wear. tmpfs size is auto-calculated from `CHAIN_STATE_DB_SIZE` + 10% headroom (allocated on use, not reserved).
-- **EOSIO snapshot scheduling**: Periodic chain snapshots via Leap's producer API (`/v1/producer/schedule_snapshot`).
+- **chain snapshot scheduling**: Periodic chain snapshots via the producer API (`/v1/producer/schedule_snapshot`).
 - **S3 archival**: Streaming backup and recovery to S3-compatible storage using rclone with zstd compression (`tar | zstd | rclone rcat` for upload, `rclone cat | zstd -d | tar -x` for download — no intermediate files).
 - **BTRFS filesystem snapshots**: Consistent full-node backups with minimal downtime (stop → BTRFS snapshot → start → upload from snapshot).
 - **API gateway**: OpenResty reverse proxy with API key authentication, per-key rate limiting, WebSocket proxy for SHiP, TLS termination, and optional Cloudflare Zero Trust tunnel.
@@ -91,7 +91,7 @@ core-node/
 │       │   └── auth.lua           # API key auth + rate limiting
 │       └── logging-{production,standard,debug,minimal}.json
 ├── docker/
-│   ├── Dockerfile                 # Node image (Ubuntu 22.04 + Leap v5.0.3)
+│   ├── Dockerfile                 # Node image (Ubuntu 24.04 + AnvoIO Core)
 │   └── entrypoint.sh             # Container entrypoint with snapshot auto-detection
 ├── scripts/
 │   ├── setup/
@@ -106,7 +106,7 @@ core-node/
 │   │   ├── status.sh             # Container, head block, LIB, peers, block age
 │   │   └── logs.sh               # Docker log viewer (-f, -n, --since)
 │   ├── snapshot/
-│   │   ├── create.sh             # Create EOSIO snapshot via producer API
+│   │   ├── create.sh             # Create chain snapshot via producer API
 │   │   ├── restore.sh            # Multi-source restore (local/S3/URL/providers)
 │   │   ├── prune.sh              # Retention-based cleanup with --dry-run
 │   │   └── schedule.sh           # Schedule/list/cancel via producer API
@@ -137,7 +137,7 @@ core-node/
 |--------|-------------|
 | `scripts/setup/wizard.sh` | Interactive wizard — configures all options, writes `node.conf` |
 | `scripts/setup/wizard.sh --config node.conf` | Non-interactive mode — reads existing config, generates all files |
-| `scripts/setup/generate-config.sh node.conf` | Generate Docker/nodeos configs from `node.conf` |
+| `scripts/setup/generate-config.sh node.conf` | Generate Docker/core_netd configs from `node.conf` |
 | `scripts/setup/validate-config.sh node.conf` | Validate `node.conf` for completeness and correctness |
 | `scripts/setup/manage-keys.sh` | API key management: add, remove, list, rotate, reload |
 
@@ -155,7 +155,7 @@ core-node/
 
 | Script | Description |
 |--------|-------------|
-| `scripts/snapshot/create.sh` | Create EOSIO snapshot via `/v1/producer/create_snapshot` |
+| `scripts/snapshot/create.sh` | Create chain snapshot via `/v1/producer/create_snapshot` |
 | `scripts/snapshot/restore.sh` | Restore from local, S3, URL, or public providers |
 | `scripts/snapshot/prune.sh` | Prune old snapshots by retention count (`--dry-run` supported) |
 | `scripts/snapshot/schedule.sh` | Schedule/list/cancel periodic snapshots via producer API |
@@ -164,7 +164,7 @@ core-node/
 
 | Script | Description |
 |--------|-------------|
-| `scripts/backup/full-backup.sh` | Full backup: EOSIO snapshot → stop → BTRFS snapshot → start → S3 upload |
+| `scripts/backup/full-backup.sh` | Full backup: chain snapshot → stop → BTRFS snapshot → start → S3 upload |
 | `scripts/backup/s3-push.sh` | Stream `tar \| zstd \| rclone rcat` for blocks, state-history, state |
 | `scripts/backup/s3-pull.sh` | Download and decompress from S3 (`--snapshots-only` supported) |
 | `scripts/backup/s3-list.sh` | List remote backups with manifest parsing |
@@ -194,7 +194,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 |-----|-------------|---------|
 | `NETWORK` | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Node role (see table above) | `producer` |
-| `LEAP_VERSION` | AntelopeIO Leap version | `5.0.3` |
+| `CORE_VERSION` | AnvoIO Core version | `0.1.0-alpha` |
 | `CONTAINER_NAME` | Docker container name | `core-mainnet-producer` |
 | `STORAGE_PATH` | Base path for all node data | `/data/core-mainnet` |
 
@@ -236,7 +236,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 
 | Key | Description |
 |-----|-------------|
-| `SNAPSHOT_INTERVAL` | Blocks between EOSIO snapshots (producer role) |
+| `SNAPSHOT_INTERVAL` | Blocks between chain snapshots (producer role) |
 | `SNAPSHOT_RETENTION` | Number of local snapshots to retain |
 
 ### API Gateway

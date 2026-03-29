@@ -29,7 +29,7 @@ http {
     client_max_body_size 2m;
 
     # --- Upstreams ---
-    upstream nodeos_http {
+    upstream core_http {
         server 127.0.0.1:{{HTTP_PORT}};
         keepalive 32;
     }
@@ -44,7 +44,7 @@ http {
         # Health endpoint — no auth required
         location /health {
             access_by_lua_block { }
-            proxy_pass http://nodeos_http/v1/chain/get_info;
+            proxy_pass http://core_http/v1/chain/get_info;
             proxy_http_version 1.1;
             proxy_set_header Connection "";
         }
@@ -53,7 +53,7 @@ http {
         location / {
             access_by_lua_file /etc/openresty/lua/auth.lua;
 
-            proxy_pass http://nodeos_http;
+            proxy_pass http://core_http;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;

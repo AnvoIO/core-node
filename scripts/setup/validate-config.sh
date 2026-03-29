@@ -96,7 +96,7 @@ log_info "Checking required keys..."
 ALWAYS_REQUIRED=(
     NETWORK
     NODE_ROLE
-    LEAP_VERSION
+    CORE_VERSION
     BIND_IP
     P2P_PORT
     STORAGE_PATH

@@ -1,15 +1,18 @@
 # Core Blockchain Node Dockerfile — v3
-# Based on AntelopeIO Leap
-# Built for x86_64/amd64 platform
+# Based on AnvoIO Core (fork of AntelopeIO Spring)
+# Multi-arch: x86_64/amd64 and ARM64/aarch64
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-# Build argument for Leap version (overridable at build time)
-ARG LEAP_VERSION=5.0.3
+# Build argument for Core version (AnvoIO/core release version)
+ARG CORE_VERSION=0.1.0-alpha
+
+# TARGETARCH is injected by Docker buildx (amd64 or arm64)
+ARG TARGETARCH
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LEAP_VERSION=${LEAP_VERSION}
+ENV CORE_VERSION=${CORE_VERSION}
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -24,22 +27,22 @@ RUN apt-get update && apt-get install -y \
     cron \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install Leap
-RUN wget -O /tmp/leap.deb "https://github.com/AntelopeIO/leap/releases/download/v${LEAP_VERSION}/leap_${LEAP_VERSION}_amd64.deb" \
+# Download and install AnvoIO Core
+RUN wget -O /tmp/anvo-core.deb "https://github.com/AnvoIO/core/releases/download/v${CORE_VERSION}/anvo-core_${CORE_VERSION}-ubuntu24.04_${TARGETARCH}.deb" \
     && apt-get update \
-    && apt-get install -y /tmp/leap.deb \
-    && rm /tmp/leap.deb \
+    && apt-get install -y /tmp/anvo-core.deb \
+    && rm /tmp/anvo-core.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install rclone for S3 backup support
 RUN curl -fsSL https://rclone.org/install.sh | bash
 
-# Create eosio user and directories
-RUN useradd -m -s /bin/bash eosio \
-    && mkdir -p /opt/eosio/{config,data,logs} \
-    && mkdir -p /opt/eosio/data/{state,state-history,blocks,snapshots} \
-    && mkdir -p /opt/eosio/config/protocol_features \
-    && chown -R eosio:eosio /opt/eosio
+# Create core user and directories
+RUN useradd -m -s /bin/bash core \
+    && mkdir -p /opt/core/{config,data,logs} \
+    && mkdir -p /opt/core/data/{state,state-history,blocks,snapshots} \
+    && mkdir -p /opt/core/config/protocol_features \
+    && chown -R core:core /opt/core
 
 # Create v3 entrypoint script
 # This handles:
@@ -50,10 +53,10 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 USER root
-WORKDIR /opt/eosio
+WORKDIR /opt/core
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 9888 9889 9876 9877 9080 9081
 
-CMD ["nodeos", "--help"]
+CMD ["core_netd", "--help"]
