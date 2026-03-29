@@ -44,7 +44,7 @@ download_snapshot() {
         log_info "Trying snapshot from ${provider}: ${url}"
 
         local tmp_file="${dest_dir}/download_tmp"
-        if curl -fSL --progress-bar -o "$tmp_file" "$url" 2>&1; then
+        if curl -fSL --connect-timeout 10 --max-time 600 --progress-bar -o "$tmp_file" "$url" 2>&1; then
             # Decompress .zst files
             if [[ "$url" == *.zst ]]; then
                 log_info "Decompressing snapshot (zstd)..."
