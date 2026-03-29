@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Shared Utility Functions
+# Core Node — Shared Utility Functions
 # =============================================================================
 # Source this file from other scripts:
 #   source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"

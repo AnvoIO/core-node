@@ -1,5 +1,5 @@
 -- =============================================================================
--- Libre Node — API Key Authentication & Rate Limiting
+-- Core Node — API Key Authentication & Rate Limiting
 -- =============================================================================
 -- Runs in the OpenResty access_by_lua_file phase.
 --

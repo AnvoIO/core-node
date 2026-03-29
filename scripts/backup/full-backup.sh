@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Full Backup
+# Core Node — Full Backup
 # =============================================================================
 # Orchestrates a complete node backup using BTRFS snapshots and S3 upload.
 # Stops the node briefly to create a consistent filesystem snapshot, then
@@ -18,23 +18,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_path="${1:-}"
-    if [[ -n "$config_path" && -f "$config_path" ]]; then echo "$config_path"; return 0; fi
-    if [[ -f "${PWD}/node.conf" ]]; then echo "./node.conf"; return 0; fi
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then echo "${PROJECT_DIR}/node.conf"; return 0; fi
-    log_error "No node.conf found. Specify path as argument."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — Full Backup"
+    echo "Core Node — Full Backup"
     echo ""
     echo "Orchestrates a complete node backup using BTRFS snapshots and S3 upload."
     echo ""
@@ -44,7 +34,7 @@ usage() {
     echo "  --help    Show this help message"
     echo ""
     echo "The backup sequence:"
-    echo "  1. Create an EOSIO snapshot via producer API"
+    echo "  1. Create a chain snapshot via producer API"
     echo "  2. Wait for blocks to finalize"
     echo "  3. Stop the node container"
     echo "  4. Create a read-only BTRFS snapshot"
@@ -74,7 +64,7 @@ main() {
         esac
     done
 
-    log_header "Libre Node — Full Backup"
+    log_header "Core Node — Full Backup"
 
     # Load configuration
     load_config "$(find_config "$config_path")"
@@ -137,39 +127,39 @@ main() {
     log_info "Starting full backup: ${BACKUP_TS}"
     log_info "Network: ${NETWORK} | Role: ${NODE_ROLE:-unknown} | Storage: ${STORAGE_PATH}"
 
-    # Step 1: Create EOSIO snapshot
-    log_info "Step 1/6: Creating EOSIO snapshot..."
+    # Step 1: Create chain snapshot
+    log_info "Step 1/7: Creating chain snapshot..."
     curl -sf -X POST "http://${api_host}:${HTTP_PORT}/v1/producer/create_snapshot" || {
-        log_warn "Could not create EOSIO snapshot (producer_api_plugin may not be enabled). Continuing..."
+        log_warn "Could not create chain snapshot (producer_api_plugin may not be enabled). Continuing..."
     }
 
     # Step 2: Wait for blocks to finalize
-    log_info "Step 2/6: Waiting 30 seconds for block finalization..."
+    log_info "Step 2/7: Waiting 30 seconds for block finalization..."
     sleep 30
 
-    # Step 3: Stop nodeos
-    log_info "Step 3/6: Stopping node..."
+    # Step 3: Stop node container
+    log_info "Step 3/7: Stopping node container..."
     docker compose -f "${STORAGE_PATH}/config/docker-compose.yml" stop
 
     # Step 4: Create BTRFS snapshot
-    log_info "Step 4/6: Creating filesystem snapshot..."
+    log_info "Step 4/7: Creating filesystem snapshot..."
     btrfs subvolume snapshot -r "${STORAGE_PATH}/data" "${BTRFS_SNAP}" || {
         log_error "BTRFS snapshot failed. Starting node back up."
         docker compose -f "${STORAGE_PATH}/config/docker-compose.yml" up -d
         exit 1
     }
 
-    # Step 5: Start nodeos back up immediately
-    log_info "Step 5/6: Starting node..."
+    # Step 5: Start node container back up immediately
+    log_info "Step 5/7: Starting node container..."
     docker compose -f "${STORAGE_PATH}/config/docker-compose.yml" up -d
     log_success "Node restarted. Downtime was minimal."
 
     # Step 6: Upload to S3 from BTRFS snapshot
-    log_info "Step 6/6: Uploading backup to S3..."
+    log_info "Step 6/7: Uploading backup to S3..."
     "${SCRIPT_DIR}/s3-push.sh" "${BTRFS_SNAP}" "${BACKUP_TS}"
 
-    # Cleanup: destroy BTRFS snapshot
-    log_info "Cleaning up filesystem snapshot..."
+    # Step 7: Clean up BTRFS snapshot
+    log_info "Step 7/7: Cleaning up filesystem snapshot..."
     btrfs subvolume delete "${BTRFS_SNAP}" || log_warn "Could not delete BTRFS snapshot at ${BTRFS_SNAP}"
 
     log_success "Full backup complete: ${BACKUP_TS}"

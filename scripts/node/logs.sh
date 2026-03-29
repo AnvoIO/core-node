@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Log Viewer
+# Core Node — Log Viewer
 # =============================================================================
-# Displays logs from the Libre blockchain node container using docker compose.
+# Displays logs from the Core blockchain node container using docker compose.
 #
 # Usage: logs.sh [path/to/node.conf] [-f] [-n NUM] [--since DURATION]
 #        logs.sh --container-name NAME [-f] [-n NUM] [--since DURATION]
@@ -14,34 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # usage
@@ -61,6 +34,8 @@ usage() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
+    require_command "docker"
+
     local config_path=""
     local follow="false"
     local tail_lines="100"
@@ -77,15 +52,15 @@ main() {
                 ;;
             -n)
                 tail_lines="${2:-100}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             --since)
                 since="${2:-}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             --container-name)
                 explicit_container="${2:-}"
-                shift 2
+                shift; [[ $# -gt 0 ]] && shift
                 ;;
             -h|--help)
                 usage

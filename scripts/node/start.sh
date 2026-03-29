@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Start Node
+# Core Node — Start Node
 # =============================================================================
-# Starts the Libre blockchain node container, building the Docker image and
+# Starts the Core blockchain node container, building the Docker image and
 # restoring a snapshot if needed.
 #
 # Usage: start.sh [path/to/node.conf]
@@ -15,34 +15,7 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 source "${SCRIPT_DIR}/../lib/network-defaults.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # download_snapshot — try public providers for the given network
@@ -117,7 +90,7 @@ wait_for_api() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log_header "Libre Node — Start"
+    log_header "Core Node — Start"
 
     # Load configuration
     local config_path
@@ -125,7 +98,7 @@ main() {
     load_config "$config_path"
 
     # Read key values
-    local NETWORK NODE_ROLE CONTAINER_NAME STORAGE_PATH LEAP_VERSION
+    local NETWORK NODE_ROLE CONTAINER_NAME STORAGE_PATH CORE_VERSION
     local STATE_IN_MEMORY HTTP_PORT SNAPSHOT_INTERVAL BIND_IP P2P_PORT
     local S3_ENABLED
 
@@ -133,7 +106,7 @@ main() {
     NODE_ROLE="$(get_config "NODE_ROLE")"
     CONTAINER_NAME="$(get_config "CONTAINER_NAME")"
     STORAGE_PATH="$(get_config "STORAGE_PATH")"
-    LEAP_VERSION="$(get_config "LEAP_VERSION" "$RECOMMENDED_LEAP_VERSION")"
+    CORE_VERSION="$(get_config "CORE_VERSION" "$RECOMMENDED_CORE_VERSION")"
     STATE_IN_MEMORY="$(get_config "STATE_IN_MEMORY" "false")"
     HTTP_PORT="$(get_config "HTTP_PORT")"
     P2P_PORT="$(get_config "P2P_PORT")"
@@ -160,9 +133,10 @@ main() {
     fi
 
     # Check if Docker image exists; build if missing
-    if [[ -z "$(docker images -q "libre-node:${LEAP_VERSION}" 2>/dev/null)" ]]; then
-        log_info "Building Docker image libre-node:${LEAP_VERSION}..."
-        docker build -t "libre-node:${LEAP_VERSION}" \
+    if [[ -z "$(docker images -q "core-node:${CORE_VERSION}" 2>/dev/null)" ]]; then
+        log_info "Building Docker image core-node:${CORE_VERSION}..."
+        docker build -t "core-node:${CORE_VERSION}" \
+            --build-arg CORE_VERSION="${CORE_VERSION}" \
             -f "${PROJECT_DIR}/docker/Dockerfile" \
             "${PROJECT_DIR}/docker/"
     fi
@@ -247,7 +221,9 @@ main() {
     echo "  Container:  ${CONTAINER_NAME}"
     echo "  Network:    ${NETWORK}"
     echo "  Role:       ${NODE_ROLE}"
-    echo "  API:        http://${BIND_IP}:${HTTP_PORT}"
+    if [[ -n "$HTTP_PORT" ]]; then
+        echo "  API:        http://${BIND_IP}:${HTTP_PORT}"
+    fi
     echo "  P2P:        ${BIND_IP}:${P2P_PORT}"
     if [[ "$API_GATEWAY_ENABLED" == "true" ]]; then
         local GATEWAY_HTTP_PORT

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Create Snapshot
+# Core Node — Create Snapshot
 # =============================================================================
-# Creates an EOSIO snapshot from a running node via the Leap producer HTTP API.
+# Creates a chain snapshot from a running node via the producer HTTP API.
 #
 # Usage:
 #   create.sh [/path/to/node.conf] [--prune]
@@ -26,33 +26,7 @@ source "${SCRIPT_DIR}/../lib/config-utils.sh"
 # shellcheck source=../lib/network-defaults.sh
 source "${SCRIPT_DIR}/../lib/network-defaults.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf from argument, $PWD, or $PROJECT_DIR
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_arg="${1:-}"
-
-    # 1. Explicit argument
-    if [[ -n "$config_arg" && -f "$config_arg" ]]; then
-        echo "$config_arg"
-        return 0
-    fi
-
-    # 2. Current working directory
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    # 3. Project root
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "Cannot find node.conf. Provide it as an argument, or ensure it exists in \$PWD or ${PROJECT_DIR}."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # Main

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Prometheus Metrics Exporter
+# Core Node — Prometheus Metrics Exporter
 # =============================================================================
 # Exposes Prometheus-format metrics for node monitoring.
 #
@@ -20,40 +20,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local explicit_path="${1:-}"
-
-    if [[ -n "$explicit_path" ]]; then
-        if [[ -f "$explicit_path" ]]; then
-            echo "$explicit_path"
-            return 0
-        fi
-        log_error "Specified config not found: ${explicit_path}"
-        return 1
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "No node.conf found. Provide a path or run from a directory containing node.conf."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # show_help
 # ---------------------------------------------------------------------------
 show_help() {
-    echo "Libre Node — Prometheus Metrics Exporter"
+    echo "Core Node — Prometheus Metrics Exporter"
     echo ""
     echo "Usage: $(basename "$0") [options] [path/to/node.conf]"
     echo ""
@@ -72,24 +45,24 @@ generate_metrics() {
     local api_url="http://${api_host}:${HTTP_PORT}"
 
     local output=""
-    output+="# HELP libre_node_up Whether the node is up\n"
-    output+="# TYPE libre_node_up gauge\n"
+    output+="# HELP core_node_up Whether the node is up\n"
+    output+="# TYPE core_node_up gauge\n"
 
     local info
     if info=$(curl -sf --max-time 5 "${api_url}/v1/chain/get_info" 2>/dev/null); then
-        output+="libre_node_up{network=\"${NETWORK}\",role=\"${NODE_ROLE}\"} 1\n"
+        output+="core_node_up{network=\"${NETWORK}\",role=\"${NODE_ROLE}\"} 1\n"
 
         local head_block_num
         head_block_num=$(echo "$info" | grep -o '"head_block_num":[0-9]*' | cut -d: -f2)
-        output+="# HELP libre_node_head_block_num Current head block number\n"
-        output+="# TYPE libre_node_head_block_num gauge\n"
-        output+="libre_node_head_block_num{network=\"${NETWORK}\"} ${head_block_num:-0}\n"
+        output+="# HELP core_node_head_block_num Current head block number\n"
+        output+="# TYPE core_node_head_block_num gauge\n"
+        output+="core_node_head_block_num{network=\"${NETWORK}\"} ${head_block_num:-0}\n"
 
         local lib_num
         lib_num=$(echo "$info" | grep -o '"last_irreversible_block_num":[0-9]*' | cut -d: -f2)
-        output+="# HELP libre_node_lib_num Last irreversible block number\n"
-        output+="# TYPE libre_node_lib_num gauge\n"
-        output+="libre_node_lib_num{network=\"${NETWORK}\"} ${lib_num:-0}\n"
+        output+="# HELP core_node_lib_num Last irreversible block number\n"
+        output+="# TYPE core_node_lib_num gauge\n"
+        output+="core_node_lib_num{network=\"${NETWORK}\"} ${lib_num:-0}\n"
 
         # Head block age
         local head_time
@@ -99,21 +72,21 @@ generate_metrics() {
             head_epoch=$(date -d "${head_time}" +%s 2>/dev/null || echo 0)
             now_epoch=$(date +%s)
             age=$((now_epoch - head_epoch))
-            output+="# HELP libre_node_head_block_age_seconds Age of head block in seconds\n"
-            output+="# TYPE libre_node_head_block_age_seconds gauge\n"
-            output+="libre_node_head_block_age_seconds{network=\"${NETWORK}\"} ${age}\n"
+            output+="# HELP core_node_head_block_age_seconds Age of head block in seconds\n"
+            output+="# TYPE core_node_head_block_age_seconds gauge\n"
+            output+="core_node_head_block_age_seconds{network=\"${NETWORK}\"} ${age}\n"
         fi
 
         # Peer count
         local connections peer_count=0
         if connections=$(curl -sf --max-time 5 "${api_url}/v1/net/connections" 2>/dev/null); then
-            peer_count=$(echo "$connections" | grep -c '"peer"' || echo 0)
+            peer_count=$(echo "$connections" | jq 'length' 2>/dev/null || echo 0)
         fi
-        output+="# HELP libre_node_peer_count Number of connected peers\n"
-        output+="# TYPE libre_node_peer_count gauge\n"
-        output+="libre_node_peer_count{network=\"${NETWORK}\"} ${peer_count}\n"
+        output+="# HELP core_node_peer_count Number of connected peers\n"
+        output+="# TYPE core_node_peer_count gauge\n"
+        output+="core_node_peer_count{network=\"${NETWORK}\"} ${peer_count}\n"
     else
-        output+="libre_node_up{network=\"${NETWORK}\",role=\"${NODE_ROLE}\"} 0\n"
+        output+="core_node_up{network=\"${NETWORK}\",role=\"${NODE_ROLE}\"} 0\n"
     fi
 
     echo -e "$output"
@@ -127,13 +100,11 @@ serve_metrics() {
 
     log_info "Serving Prometheus metrics on port ${PROMETHEUS_PORT}..."
 
+    # Each connection forks a handler that regenerates metrics fresh.
+    # socat SYSTEM runs a shell for each connection; we call generate_metrics
+    # and format a proper HTTP response with correct Content-Length.
     while true; do
-        local metrics
-        metrics=$(generate_metrics)
-        local content_length=${#metrics}
-
-        echo -e "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: ${content_length}\r\n\r\n${metrics}" | \
-            socat TCP-LISTEN:${PROMETHEUS_PORT},reuseaddr,fork STDIN || true
+        socat TCP-LISTEN:"${PROMETHEUS_PORT}",reuseaddr EXEC:"${BASH_SOURCE[0]} --once-http" 2>/dev/null || true
     done
 }
 
@@ -148,6 +119,7 @@ main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --once) mode="once"; shift ;;
+            --once-http) mode="once-http"; shift ;;
             --serve) mode="serve"; shift ;;
             --help) show_help; exit 0 ;;
             *) CONFIG_ARG="$1"; shift ;;
@@ -165,11 +137,21 @@ main() {
     BIND_IP="$(get_config "BIND_IP" "0.0.0.0")"
     PROMETHEUS_PORT="$(get_config "PROMETHEUS_PORT" "9100")"
 
-    if [[ "$mode" == "once" ]]; then
-        generate_metrics
-    else
-        serve_metrics
-    fi
+    case "$mode" in
+        once)
+            generate_metrics
+            ;;
+        once-http)
+            # Internal mode: output a full HTTP response (used by serve_metrics via socat)
+            local metrics
+            metrics="$(generate_metrics)"
+            local content_length=${#metrics}
+            printf 'HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s' "$content_length" "$metrics"
+            ;;
+        serve)
+            serve_metrics
+            ;;
+    esac
 }
 
 main "$@"
