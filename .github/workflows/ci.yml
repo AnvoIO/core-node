@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Job 1: ShellCheck + Syntax validation
+  # --------------------------------------------------------------------------
+  lint:
+    name: ShellCheck & Syntax
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: ShellCheck all scripts
+        run: bash tests/shellcheck.sh
+      - name: Bash syntax check
+        run: |
+          failed=0
+          for f in $(find . -name '*.sh' -not -path './.git/*'); do
+            if ! bash -n "$f" 2>&1; then
+              echo "SYNTAX ERROR: $f"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  # --------------------------------------------------------------------------
+  # Job 2: Config generation integration tests
+  # --------------------------------------------------------------------------
+  config-tests:
+    name: Config Generation Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run config generation tests
+        run: bash tests/test_config_generation.sh
+
+  # --------------------------------------------------------------------------
+  # Job 3: Docker build smoke test (x86_64)
+  # --------------------------------------------------------------------------
+  docker-build-x86:
+    name: Docker Build (x86_64)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test Docker image
+        run: bash tests/test_docker_build.sh
+
+  # --------------------------------------------------------------------------
+  # Job 4: Docker build smoke test (ARM64)
+  # --------------------------------------------------------------------------
+  docker-build-arm64:
+    name: Docker Build (ARM64)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test Docker image
+        run: bash tests/test_docker_build.sh
+
+  # --------------------------------------------------------------------------
+  # Job 5: Operational node test (x86_64)
+  # --------------------------------------------------------------------------
+  operational-test-x86:
+    name: Operational Test (x86_64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run operational node test
+        run: bash tests/test_node_operational.sh
+
+  # --------------------------------------------------------------------------
+  # Job 6: Operational node test (ARM64)
+  # --------------------------------------------------------------------------
+  operational-test-arm64:
+    name: Operational Test (ARM64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run operational node test
+        run: bash tests/test_node_operational.sh
+
+  # --------------------------------------------------------------------------
+  # Gate: All required checks must pass
+  # --------------------------------------------------------------------------
+  all-passing:
+    name: All Tests Passed
+    needs:
+      - lint
+      - config-tests
+      - docker-build-x86
+      - docker-build-arm64
+      - operational-test-x86
+      - operational-test-arm64
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          echo "lint: ${{ needs.lint.result }}"
+          echo "config-tests: ${{ needs.config-tests.result }}"
+          echo "docker-build-x86: ${{ needs.docker-build-x86.result }}"
+          echo "docker-build-arm64: ${{ needs.docker-build-arm64.result }}"
+          echo "operational-test-x86: ${{ needs.operational-test-x86.result }}"
+          echo "operational-test-arm64: ${{ needs.operational-test-arm64.result }}"
+      - name: Gate
+        if: >-
+          needs.lint.result != 'success' ||
+          needs.config-tests.result != 'success' ||
+          needs.docker-build-x86.result != 'success' ||
+          needs.docker-build-arm64.result != 'success' ||
+          needs.operational-test-x86.result != 'success' ||
+          needs.operational-test-arm64.result != 'success'
+        run: exit 1

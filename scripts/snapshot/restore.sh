@@ -141,7 +141,8 @@ find_provider_snapshot() {
         fi
 
         log_info "Trying ${provider}..."
-        local filename="snapshot-${provider,,}-$(date +%Y%m%d%H%M%S)"
+        local filename
+        filename="snapshot-${provider,,}-$(date +%Y%m%d%H%M%S)"
 
         if curl -fL -o "${snapshots_dir}/${filename}.zst" "$url" 2>/dev/null; then
             log_info "Downloaded from ${provider}. Decompressing..."
@@ -177,7 +178,8 @@ download_url_snapshot() {
     local url="$1"
     local snapshots_dir="$2"
 
-    local filename="snapshot-url-$(date +%Y%m%d%H%M%S)"
+    local filename
+    filename="snapshot-url-$(date +%Y%m%d%H%M%S)"
 
     log_info "Downloading snapshot from: ${url}"
 
