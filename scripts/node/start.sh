@@ -71,15 +71,35 @@ download_snapshot() {
 # ---------------------------------------------------------------------------
 wait_for_api() {
     local http_port="$1"
+    local container_name="$2"
+    local bind_ip="${3:-localhost}"
     local max_wait=120
     local waited=0
 
-    log_info "Waiting for node to start..."
-    while ! curl -sf "http://localhost:${http_port}/v1/chain/get_info" > /dev/null 2>&1; do
+    # Use localhost if bound to all interfaces
+    local api_host="$bind_ip"
+    [[ "$api_host" == "0.0.0.0" ]] && api_host="localhost"
+
+    log_info "Waiting for node API at ${api_host}:${http_port}..."
+    while ! curl -sf --max-time 3 "http://${api_host}:${http_port}/v1/chain/get_info" > /dev/null 2>&1; do
         sleep 2
         waited=$((waited + 2))
+
+        # Check if container is still running
+        if ! docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            log_error "Container '${container_name}' exited unexpectedly."
+            log_error "Check logs: docker logs ${container_name}"
+            docker logs --tail 20 "$container_name" 2>&1 | while IFS= read -r line; do
+                echo "  $line"
+            done
+            return 1
+        fi
+
         if [[ $waited -ge $max_wait ]]; then
             log_warn "Node did not respond within ${max_wait} seconds. Check logs."
+            docker logs --tail 10 "$container_name" 2>&1 | while IFS= read -r line; do
+                echo "  $line"
+            done
             return 1
         fi
     done
@@ -199,7 +219,7 @@ main() {
 
     # Wait for node to be ready (if role has HTTP API)
     if [[ "$NODE_ROLE" != "seed" ]]; then
-        wait_for_api "$HTTP_PORT" || true
+        wait_for_api "$HTTP_PORT" "$CONTAINER_NAME" "$BIND_IP" || true
     fi
 
     # Schedule periodic snapshots (producer role only)
