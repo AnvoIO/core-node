@@ -49,7 +49,7 @@ build/
 
 # Docker images (optional - uncomment if you don't want to track)
 # *.tar
-# libre-node:* 
+# core-node:* 
 _tmp/
 
 # v3 Configuration (contains user-specific settings)
@@ -60,8 +60,7 @@ s3.conf
 .rclone.conf
 
 # Generated runtime configs (output of generate-config.sh)
-# Note: mainnet/config/ and testnet/config/ are tracked as v2 reference configs
-# v3 generated configs live outside the repo (in STORAGE_PATH)
+# Generated configs live outside the repo (in STORAGE_PATH)
 generated/
 
 # Snapshots

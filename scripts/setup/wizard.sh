@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node v3 — Interactive Setup Wizard
+# Core Node v3 — Interactive Setup Wizard
 # =============================================================================
-# Walks the user through configuring a Libre blockchain node and writes all
+# Walks the user through configuring a Core blockchain node and writes all
 # answers to a node.conf file.  Run with --help for usage information.
 #
 # Make executable:  chmod +x scripts/setup/wizard.sh
@@ -32,7 +32,7 @@ NON_INTERACTIVE=false
 
 # Required keys that mark a config as "complete"
 REQUIRED_KEYS=(
-    NETWORK NODE_ROLE LEAP_VERSION BIND_IP P2P_PORT
+    NETWORK NODE_ROLE CORE_VERSION BIND_IP P2P_PORT
     STORAGE_PATH STATE_IN_MEMORY SNAPSHOT_INTERVAL SNAPSHOT_RETENTION
     LOG_PROFILE API_GATEWAY_ENABLED FIREWALL_ENABLED WEBHOOK_ENABLED
     PROMETHEUS_ENABLED AGENT_NAME CONTAINER_NAME RESTART_POLICY
@@ -43,7 +43,7 @@ REQUIRED_KEYS=(
 # ---------------------------------------------------------------------------
 show_help() {
     cat <<EOF
-Libre Node v3 — Setup Wizard
+Core Node — Setup Wizard
 
 Usage:
   $(basename "$0") [OPTIONS]
@@ -56,7 +56,7 @@ Options:
 
 Examples:
   $(basename "$0")
-  $(basename "$0") --config /etc/libre/node.conf
+  $(basename "$0") --config /etc/core/node.conf
 EOF
     exit 0
 }
@@ -181,19 +181,19 @@ section_node_role() {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Leap version
+# 3. Core version
 # ---------------------------------------------------------------------------
-section_leap_version() {
-    log_header "Leap Version"
+section_core_version() {
+    log_header "Core Version"
 
     local prev
-    prev="$(get_config LEAP_VERSION "")"
+    prev="$(get_config CORE_VERSION "")"
 
     # Attempt to fetch releases from GitHub
     local -a versions=()
     local github_json=""
     github_json="$(curl -s --max-time 10 \
-        "https://api.github.com/repos/AntelopeIO/leap/releases" 2>/dev/null)" || true
+        "https://api.github.com/repos/AnvoIO/core/releases" 2>/dev/null)" || true
 
     if [[ -n "$github_json" ]]; then
         local -a raw_tags=()
@@ -226,12 +226,12 @@ section_leap_version() {
     local default_idx=1
 
     # Always include the recommended version
-    choices+=("${RECOMMENDED_LEAP_VERSION} (recommended)")
+    choices+=("${RECOMMENDED_CORE_VERSION} (recommended)")
 
     # Add GitHub versions that differ from recommended
     local added=0
     for v in "${versions[@]}"; do
-        [[ "$v" == "$RECOMMENDED_LEAP_VERSION" ]] && continue
+        [[ "$v" == "$RECOMMENDED_CORE_VERSION" ]] && continue
         if [[ $added -eq 0 ]]; then
             choices+=("${v} (latest)")
         else
@@ -253,14 +253,14 @@ section_leap_version() {
     fi
 
     local selection
-    selection="$(ask_choice "Select Leap version to install:" choices "$default_idx")"
+    selection="$(ask_choice "Select Core version to install:" choices "$default_idx")"
 
     # Extract the version number (first space-delimited token)
     local version
     version="$(echo "$selection" | awk '{print $1}')"
 
-    set_config LEAP_VERSION "$version"
-    log_success "Leap version set to ${version}"
+    set_config CORE_VERSION "$version"
+    log_success "Core version set to ${version}"
 }
 
 # ---------------------------------------------------------------------------
@@ -485,7 +485,7 @@ section_storage() {
     local network
     network="$(get_config NETWORK "mainnet")"
 
-    local default_path="/data/libre-${network}"
+    local default_path="/data/core-${network}"
     local prev
     prev="$(get_config STORAGE_PATH "$default_path")"
 
@@ -690,7 +690,7 @@ section_s3() {
 
     # Rclone remote name
     local prev_remote
-    prev_remote="$(get_config S3_REMOTE "libre-backup")"
+    prev_remote="$(get_config S3_REMOTE "core-backup")"
     local remote_name
     remote_name="$(ask_input "Rclone remote name" "$prev_remote")"
     set_config S3_REMOTE "$remote_name"
@@ -714,7 +714,7 @@ section_s3() {
 
     # S3 path prefix
     local prev_prefix
-    prev_prefix="$(get_config S3_PREFIX "libre-${network}/")"
+    prev_prefix="$(get_config S3_PREFIX "core-${network}/")"
     local prefix
     prefix="$(ask_input "S3 path prefix" "$prev_prefix")"
     set_config S3_PREFIX "$prefix"
@@ -914,7 +914,7 @@ section_api_gateway() {
         local prev_domain
         prev_domain="$(get_config TLS_DOMAIN "")"
         local domain
-        domain="$(ask_input "Domain name (e.g. api.libre.example.com)" "$prev_domain")"
+        domain="$(ask_input "Domain name (e.g. api.core.example.com)" "$prev_domain")"
         set_config TLS_DOMAIN "$domain"
 
         local prev_email
@@ -1199,10 +1199,10 @@ generate_derived_values() {
         *)            role_label="$role"        ;;
     esac
 
-    local agent_name="Libre ${net_label} ${role_label} Node"
+    local agent_name="Core ${net_label} ${role_label} Node"
     set_config AGENT_NAME "$agent_name"
 
-    local container_name="libre-${network}-${role}"
+    local container_name="core-${network}-${role}"
     set_config CONTAINER_NAME "$container_name"
 
     local restart_policy="unless-stopped"
@@ -1237,7 +1237,7 @@ show_summary() {
 main() {
     parse_args "$@"
 
-    log_header "Libre Node v3 Setup Wizard"
+    log_header "Core Node v3 Setup Wizard"
 
     # Load existing config if present
     if [[ -f "$CONFIG_PATH" ]]; then
@@ -1271,7 +1271,7 @@ main() {
 
     section_network
     section_node_role
-    section_leap_version
+    section_core_version
     section_bind_ip
     section_ports
     section_peers

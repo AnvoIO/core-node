@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — Error Diagnosis & Automated Recovery
+# Core Node — Error Diagnosis & Automated Recovery
 # =============================================================================
 # Analyzes node state, detects common failure modes, and attempts automated
 # recovery when possible.
@@ -26,36 +26,13 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 # shellcheck source=../lib/config-utils.sh
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf from argument, $PWD, or $PROJECT_DIR
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_arg="${1:-}"
-
-    if [[ -n "$config_arg" && -f "$config_arg" ]]; then
-        echo "$config_arg"
-        return 0
-    fi
-
-    if [[ -f "${PWD}/node.conf" ]]; then
-        echo "${PWD}/node.conf"
-        return 0
-    fi
-
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then
-        echo "${PROJECT_DIR}/node.conf"
-        return 0
-    fi
-
-    log_error "Cannot find node.conf. Provide it as an argument, or ensure it exists in \$PWD or ${PROJECT_DIR}."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # show_help
 # ---------------------------------------------------------------------------
 show_help() {
-    echo "Libre Node — Error Diagnosis & Automated Recovery"
+    echo "Core Node — Error Diagnosis & Automated Recovery"
     echo ""
     echo "Usage: $(basename "$0") [/path/to/node.conf] [OPTIONS]"
     echo ""
@@ -66,7 +43,7 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  $(basename "$0") --diagnose"
-    echo "  $(basename "$0") /srv/libre/node.conf --fix"
+    echo "  $(basename "$0") /srv/core/node.conf --fix"
 }
 
 # ---------------------------------------------------------------------------
@@ -158,7 +135,7 @@ diagnose() {
     if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
         local recent_logs
         recent_logs="$(docker logs --tail 200 "${CONTAINER_NAME}" 2>&1 || true)"
-        if echo "$recent_logs" | grep -qi "fork\|unlinkable block"; then
+        if echo "$recent_logs" | grep -qi "switching forks\|fork detected\|unlinkable block"; then
             log_error "  Fork or unlinkable block detected in logs."
             echo "  Suggested fix: stop the node, remove state files, and restore from snapshot"
             issues_found=$((issues_found + 1))
@@ -201,7 +178,7 @@ diagnose() {
     if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
         local recent_logs
         recent_logs="$(docker logs --tail 200 "${CONTAINER_NAME}" 2>&1 || true)"
-        if echo "$recent_logs" | grep -qi "killed\|oom\|out of memory\|cannot allocate memory"; then
+        if echo "$recent_logs" | grep -qi "Killed process\|oom-kill\|out of memory\|cannot allocate memory"; then
             log_error "  Out-of-memory or OOM-kill pattern detected in logs."
             echo "  Suggested fix: increase available RAM or reduce node memory usage"
             issues_found=$((issues_found + 1))
@@ -314,7 +291,7 @@ fix() {
         has_corrupt_state=true
     fi
 
-    if echo "$recent_logs" | grep -qi "fork\|unlinkable block"; then
+    if echo "$recent_logs" | grep -qi "switching forks\|fork detected\|unlinkable block"; then
         has_fork=true
     fi
 
@@ -326,7 +303,7 @@ fix() {
         fi
     fi
 
-    if echo "$recent_logs" | grep -qi "killed\|oom\|out of memory\|cannot allocate memory"; then
+    if echo "$recent_logs" | grep -qi "Killed process\|oom-kill\|out of memory\|cannot allocate memory"; then
         has_oom=true
     fi
 

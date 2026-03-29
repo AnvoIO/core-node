@@ -4,7 +4,7 @@ Guidance for AI coding assistants working on this repository.
 
 ## Project Overview
 
-Docker-based deployment system for Libre blockchain nodes (mainnet/testnet) using AntelopeIO Leap v5.0.3. A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, nodeos config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates.
+Docker-based deployment system for Core blockchain nodes (mainnet/testnet) using [AnvoIO Core](https://github.com/AnvoIO/core). A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, core_netd config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates. Multi-arch: supports x86_64 and ARM64.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ All scripts source from `scripts/lib/`:
 
 - **common.sh** — Logging (log_info/warn/error/success/debug/header), user prompts (ask_yes_no/ask_input/ask_choice/ask_multi_select), validators (validate_ip/port/url/path/btrfs/not_empty), utilities (detect_interfaces/check_port_available/require_command/require_root). Has a double-source guard via `_COMMON_SH_LOADED`. Sets `PROJECT_DIR` to repo root. Uses `_COMMON_LIB_DIR` internally (not `SCRIPT_DIR`) to avoid overwriting the caller's SCRIPT_DIR.
 - **config-utils.sh** — node.conf read/write: load_config, get_config, set_config, config_exists, remove_config, list_config, backup_config, new_config. Also works as CLI: `config-utils.sh -f node.conf get KEY`.
-- **network-defaults.sh** — Network constants: get_chain_id, get_default_ports, get_genesis_json, get_default_plugins (per role), get_default_resources (per role), calc_state_tmpfs_size. `RECOMMENDED_LEAP_VERSION="5.0.3"`.
+- **network-defaults.sh** — Network constants: get_chain_id, get_default_ports, get_genesis_json, get_default_plugins (per role), get_default_resources (per role), calc_state_tmpfs_size. `RECOMMENDED_CORE_VERSION="0.1.0-alpha"`.
 
 ### Node Roles and Plugins
 
@@ -47,9 +47,9 @@ All scripts source from `scripts/lib/`:
 - **State-in-memory (tmpfs)** — protects SSDs; tmpfs size auto-derived from CHAIN_STATE_DB_SIZE + 10% headroom (allocated on use, not reserved). No blocks tmpfs — blocks are sequential writes, SSD-safe.
 - **One node per config** — each wizard run produces one node.conf for one node
 - **Peer lists in separate files** — `config/peers-{mainnet,testnet}.conf` for independent updates
-- **Templates use `{{PLACEHOLDER}}` syntax** — replaced by generate-config.sh using awk
-- **30m stop_grace_period** — allows nodeos to flush state cleanly on shutdown
-- **NODEOS_COMMAND indentation** — must use 6-space indent for YAML folded style compatibility
+- **Templates use `{{PLACEHOLDER}}` syntax** — replaced by generate-config.sh using sed and awk
+- **30m stop_grace_period** — allows core_netd to flush state cleanly on shutdown
+- **CORE_COMMAND indentation** — must use 6-space indent for YAML folded style compatibility
 - **API Gateway (OpenResty)** — optional reverse proxy with Lua-based API key auth + per-key token-bucket rate limiting. Auth logic in `config/templates/lua/auth.lua`, keys in flat file. WebSocket proxy for SHiP.
 - **Cloudflare Zero Trust** — optional `cloudflared` tunnel sidecar in docker-compose, gated behind API_GATEWAY_ENABLED. CF tunnel provides network ingress; API keys still enforced at application level.
 - **Streaming backup/restore** — `s3-push.sh` uses `tar | zstd -T0 | rclone rcat` (no intermediate files). `s3-pull.sh` uses `rclone cat | zstd -d | tar -x`. No local temp files or double-disk-space requirement.

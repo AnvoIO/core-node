@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Configuration Generator
+# Core Node — Configuration Generator
 # =============================================================================
 # Reads a node.conf file and generates all runtime configuration files:
-#   - config.ini          (nodeos configuration)
+#   - config.ini          (core_netd configuration)
 #   - docker-compose.yml  (container orchestration)
 #   - genesis.json        (chain genesis)
 #   - logging.json        (logging profile)
@@ -72,7 +72,7 @@ load_config "$CONF_FILE"
 # Read all config values into local variables
 NETWORK="$(get_config NETWORK)"
 NODE_ROLE="$(get_config NODE_ROLE)"
-LEAP_VERSION="$(get_config LEAP_VERSION)"
+CORE_VERSION="$(get_config CORE_VERSION)"
 BIND_IP="$(get_config BIND_IP)"
 HTTP_PORT="$(get_config HTTP_PORT "")"
 P2P_PORT="$(get_config P2P_PORT)"
@@ -87,6 +87,7 @@ RESTART_POLICY="$(get_config RESTART_POLICY "unless-stopped")"
 CHAIN_STATE_DB_SIZE="$(get_config CHAIN_STATE_DB_SIZE)"
 CHAIN_THREADS="$(get_config CHAIN_THREADS)"
 HTTP_THREADS="$(get_config HTTP_THREADS)"
+NET_THREADS="$(get_config NET_THREADS "2")"
 MAX_CLIENTS="$(get_config MAX_CLIENTS)"
 MAX_TRANSACTION_TIME="$(get_config MAX_TRANSACTION_TIME)"
 PEERS="$(get_config PEERS "")"
@@ -155,7 +156,7 @@ CONFIG_TEMPLATE="$(cat "${TEMPLATE_DIR}/config.ini.tmpl")"
 PLUGINS_BLOCK=""
 while IFS= read -r plugin; do
     [[ -z "$plugin" ]] && continue
-    PLUGINS_BLOCK+="plugin = eosio::${plugin}"$'\n'
+    PLUGINS_BLOCK+="plugin = core_net::${plugin}"$'\n'
 done < <(get_default_plugins "$NODE_ROLE")
 # Remove trailing newline
 PLUGINS_BLOCK="${PLUGINS_BLOCK%$'\n'}"
@@ -166,7 +167,7 @@ if [[ "$NODE_ROLE" == "full-api" || "$NODE_ROLE" == "full-history" ]]; then
     STATE_HISTORY_BLOCK="state-history-endpoint = ${BIND_IP}:${SHIP_PORT}"$'\n'
     STATE_HISTORY_BLOCK+="trace-history = true"$'\n'
     STATE_HISTORY_BLOCK+="chain-state-history = true"$'\n'
-    STATE_HISTORY_BLOCK+="state-history-dir = /opt/eosio/data/state-history"$'\n'
+    STATE_HISTORY_BLOCK+="state-history-dir = /opt/core/data/state-history"$'\n'
     STATE_HISTORY_BLOCK+="state-history-stride = 250000"$'\n'
     STATE_HISTORY_BLOCK+="state-history-retained-dir = retained"
     if [[ "$NODE_ROLE" == "full-history" ]]; then
@@ -248,6 +249,7 @@ CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{P2P_PORT}}|${P2P_PORT}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{CHAIN_STATE_DB_SIZE}}|${CHAIN_STATE_DB_SIZE}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{CHAIN_THREADS}}|${CHAIN_THREADS}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{HTTP_THREADS}}|${HTTP_THREADS}|g")"
+CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{NET_THREADS}}|${NET_THREADS}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{MAX_CLIENTS}}|${MAX_CLIENTS}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{MAX_TRANSACTION_TIME}}|${MAX_TRANSACTION_TIME}|g")"
 CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed "s|{{AGENT_NAME}}|${AGENT_NAME}|g")"
@@ -302,13 +304,13 @@ log_header "Generating docker-compose.yml"
 COMPOSE_TEMPLATE="$(cat "${TEMPLATE_DIR}/docker-compose.yml.tmpl")"
 
 # Build IMAGE_NAME
-IMAGE_NAME="libre-node:${LEAP_VERSION}"
+IMAGE_NAME="core-node:${CORE_VERSION}"
 
-# Build NODEOS_COMMAND
-NODEOS_COMMAND="      nodeos
-      --config-dir /opt/eosio/config
-      --data-dir /opt/eosio/data
-      --genesis-json /opt/eosio/config/genesis.json"
+# Build CORE_COMMAND
+CORE_COMMAND="      core_netd
+      --config-dir /opt/core/config
+      --data-dir /opt/core/data
+      --genesis-json /opt/core/config/genesis.json"
 
 # Build TMPFS_VOLUMES (state only — blocks are sequential writes, SSD-safe)
 TMPFS_BLOCK=""
@@ -319,7 +321,7 @@ if [[ "$STATE_IN_MEMORY" == "true" ]]; then
         log_info "Auto-calculated STATE_TMPFS_SIZE=${STATE_TMPFS_SIZE} from CHAIN_STATE_DB_SIZE=${CHAIN_STATE_DB_SIZE}MB + 10%"
     fi
     TMPFS_BLOCK="      - type: tmpfs
-        target: /opt/eosio/data/state
+        target: /opt/core/data/state
         tmpfs:
           size: ${STATE_TMPFS_SIZE}"
 fi
@@ -397,7 +399,7 @@ COMPOSE_CONTENT="$(echo "$COMPOSE_CONTENT" | sed "s|{{RESTART_POLICY}}|${RESTART
 COMPOSE_CONTENT="$(echo "$COMPOSE_CONTENT" | sed "s|{{STOP_GRACE_PERIOD}}|30m|g")"
 
 # Multi-line replacements
-COMPOSE_CONTENT="$(replace_placeholder "{{NODEOS_COMMAND}}" "$NODEOS_COMMAND" "$COMPOSE_CONTENT")"
+COMPOSE_CONTENT="$(replace_placeholder "{{CORE_COMMAND}}" "$CORE_COMMAND" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{TMPFS_VOLUMES}}" "$TMPFS_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{EXTRA_VOLUMES}}" "" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{HEALTHCHECK}}" "$HEALTHCHECK_BLOCK" "$COMPOSE_CONTENT")"
@@ -462,7 +464,7 @@ if [[ "$API_GATEWAY_ENABLED" == "true" ]]; then
     # Build SHIP_UPSTREAM
     SHIP_UPSTREAM_BLOCK=""
     if [[ "$NODE_ROLE" == "full-api" || "$NODE_ROLE" == "full-history" ]]; then
-        SHIP_UPSTREAM_BLOCK="    upstream nodeos_ship {
+        SHIP_UPSTREAM_BLOCK="    upstream core_ship {
         server 127.0.0.1:${SHIP_PORT};
     }"
     fi
@@ -490,7 +492,7 @@ if [[ "$API_GATEWAY_ENABLED" == "true" ]]; then
         access_by_lua_file /etc/openresty/lua/auth.lua;
 
         location / {
-            proxy_pass http://nodeos_ship;
+            proxy_pass http://core_ship;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \"upgrade\";
@@ -539,7 +541,7 @@ log_header "Configuration Generation Complete"
 
 log_info "Network:    ${NETWORK}"
 log_info "Node Role:  ${NODE_ROLE}"
-log_info "Leap:       ${LEAP_VERSION}"
+log_info "Core:       ${CORE_VERSION}"
 log_info "Container:  ${CONTAINER_NAME}"
 echo ""
 

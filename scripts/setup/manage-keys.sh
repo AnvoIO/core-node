@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — API Key Manager
+# Core Node — API Key Manager
 # =============================================================================
 # Manages API keys for the OpenResty gateway.
 #

@@ -8,10 +8,10 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets these int
 |-----|----------|-------------|---------|
 | `NETWORK` | Yes | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Yes | `producer`, `seed`, `light-api`, `full-api`, `full-history` | `producer` |
-| `LEAP_VERSION` | Yes | AntelopeIO Leap version | `5.0.3` |
-| `CONTAINER_NAME` | Yes | Docker container name | `libre-mainnet-producer` |
-| `AGENT_NAME` | Yes | Identifier for alerts/metrics | `libre-mainnet` |
-| `STORAGE_PATH` | Yes | Base path for node data (must be BTRFS) | `/data/libre-mainnet` |
+| `CORE_VERSION` | Yes | AnvoIO Core version | `0.1.0-alpha` |
+| `CONTAINER_NAME` | Yes | Docker container name | `core-mainnet-producer` |
+| `AGENT_NAME` | Yes | Identifier for alerts/metrics | `core-mainnet` |
+| `STORAGE_PATH` | Yes | Base path for node data (must be BTRFS) | `/data/core-mainnet` |
 
 ## Network Settings
 
@@ -19,8 +19,8 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets these int
 |-----|----------|-------------|---------|
 | `BIND_IP` | Yes | IP to bind services | `0.0.0.0` |
 | `P2P_PORT` | Yes | P2P network port | `9876` |
-| `HTTP_PORT` | Non-seed | HTTP API port | `8888` |
-| `SHIP_PORT` | full-api, full-history | State History port | `8080` |
+| `HTTP_PORT` | Non-seed | HTTP API port | `9888` |
+| `SHIP_PORT` | full-api, full-history | State History port | `9080` |
 
 ## Performance Tuning
 
@@ -31,7 +31,7 @@ Defaults vary by role. These are set during wizard resource tuning.
 | `CHAIN_STATE_DB_SIZE` | Yes | DB size in MB | 16384 | 32768 | 32768 | 32768 | 65536 |
 | `CHAIN_THREADS` | Yes | Chain threads | 2 | 4 | 4 | 4 | 4 |
 | `HTTP_THREADS` | Yes | HTTP threads | 2 | 2 | 6 | 6 | 6 |
-| `MAX_CLIENTS` | Yes | Max P2P clients | 25 | 250 | 100 | 100 | 100 |
+| `MAX_CLIENTS` | Yes | Max P2P clients | 50 | 250 | 200 | 200 | 200 |
 | `MAX_TRANSACTION_TIME` | Yes | Max tx time (ms) | 30 | 1000 | 1000 | 1000 | 1000 |
 
 ## State-in-Memory
@@ -49,7 +49,7 @@ tmpfs is allocated on actual use, not reserved. A 22GB tmpfs with 10GB used only
 
 | Key | Required | Description | Default |
 |-----|----------|-------------|---------|
-| `SNAPSHOT_INTERVAL` | Yes | Blocks between EOSIO snapshots | `1000` |
+| `SNAPSHOT_INTERVAL` | Yes | Blocks between chain snapshots | `1000` |
 | `SNAPSHOT_RETENTION` | Yes | Number of local snapshots to keep | `5` |
 | `CUSTOM_SNAPSHOT_URL` | No | URL for snapshot restore fallback (used by `restore.sh` auto-detect) | |
 

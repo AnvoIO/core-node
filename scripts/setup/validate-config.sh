@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Libre Node — Configuration Validator
+# Core Node — Configuration Validator
 # =============================================================================
 # Validates a node.conf file for completeness and correctness.
 #
@@ -96,7 +96,7 @@ log_info "Checking required keys..."
 ALWAYS_REQUIRED=(
     NETWORK
     NODE_ROLE
-    LEAP_VERSION
+    CORE_VERSION
     BIND_IP
     P2P_PORT
     STORAGE_PATH
@@ -123,6 +123,7 @@ RESOURCE_KEYS=(
     CHAIN_STATE_DB_SIZE
     CHAIN_THREADS
     HTTP_THREADS
+    NET_THREADS
     MAX_CLIENTS
     MAX_TRANSACTION_TIME
 )

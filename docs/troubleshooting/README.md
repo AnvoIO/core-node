@@ -23,15 +23,15 @@
 **Container not found:**
 ```bash
 # Check if image exists
-docker images | grep libre-node
+docker images | grep core-node
 
 # Rebuild if needed
-docker build -t "libre-node:5.0.3" -f docker/Dockerfile docker/
+docker build -t "core-node:0.1.0-alpha" -f docker/Dockerfile docker/
 ```
 
 **Port conflict:**
 ```bash
-ss -tlnp | grep :8888
+ss -tlnp | grep :9888
 # Change HTTP_PORT in node.conf and regenerate
 ```
 
@@ -46,7 +46,7 @@ The node needs a snapshot to boot when `STATE_IN_MEMORY=true`. The start script 
 
 **Check peer count:**
 ```bash
-curl -s http://localhost:8888/v1/net/connections | jq 'length'
+curl -s http://localhost:9888/v1/net/connections | jq 'length'
 ```
 
 **No peers:** Verify peer list is current. Update `config/peers-{network}.conf` and regenerate config.
@@ -83,7 +83,7 @@ btrfs scrub start /data
 
 **Snapshot failed:** Ensure storage path is on a BTRFS volume:
 ```bash
-stat -f -c %T /data/libre-mainnet
+stat -f -c %T /data/core-mainnet
 # Should output "btrfs"
 ```
 
@@ -105,7 +105,7 @@ grep S3_ node.conf
 Certificates are managed via certbot (external to the gateway). If TLS fails:
 ```bash
 # Check gateway logs
-docker logs libre-mainnet-full-api-gateway
+docker logs core-mainnet-full-api-gateway
 
 # Renew certificates
 certbot renew

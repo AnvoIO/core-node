@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 List Backups
+# Core Node — S3 List Backups
 # =============================================================================
 # Lists available remote backups stored on S3, including metadata from each
 # backup's manifest file.
@@ -17,23 +17,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_path="${1:-}"
-    if [[ -n "$config_path" && -f "$config_path" ]]; then echo "$config_path"; return 0; fi
-    if [[ -f "${PWD}/node.conf" ]]; then echo "./node.conf"; return 0; fi
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then echo "${PROJECT_DIR}/node.conf"; return 0; fi
-    log_error "No node.conf found. Specify path as argument."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 List Backups"
+    echo "Core Node — S3 List Backups"
     echo ""
     echo "Lists available remote backups stored on S3."
     echo ""

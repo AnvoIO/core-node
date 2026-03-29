@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Libre Node — S3 Pull (Download Backup)
+# Core Node — S3 Pull (Download Backup)
 # =============================================================================
 # Downloads and restores a backup from S3. If no backup name is given, the
 # latest available backup is used.
@@ -21,23 +21,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 source "${SCRIPT_DIR}/../lib/config-utils.sh"
 
-# ---------------------------------------------------------------------------
-# find_config — locate node.conf
-# ---------------------------------------------------------------------------
-find_config() {
-    local config_path="${1:-}"
-    if [[ -n "$config_path" && -f "$config_path" ]]; then echo "$config_path"; return 0; fi
-    if [[ -f "${PWD}/node.conf" ]]; then echo "./node.conf"; return 0; fi
-    if [[ -f "${PROJECT_DIR}/node.conf" ]]; then echo "${PROJECT_DIR}/node.conf"; return 0; fi
-    log_error "No node.conf found. Specify path as argument."
-    return 1
-}
+# find_config is provided by config-utils.sh
 
 # ---------------------------------------------------------------------------
 # usage
 # ---------------------------------------------------------------------------
 usage() {
-    echo "Libre Node — S3 Pull (Download Backup)"
+    echo "Core Node — S3 Pull (Download Backup)"
     echo ""
     echo "Downloads and restores a backup from S3."
     echo ""
@@ -86,7 +76,7 @@ main() {
         esac
     done
 
-    log_header "Libre Node — S3 Pull"
+    log_header "Core Node — S3 Pull"
 
     # Load configuration
     load_config "$(find_config "$config_path")"

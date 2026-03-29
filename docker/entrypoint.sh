@@ -2,22 +2,22 @@
 set -e
 
 # Ensure data directories exist and have correct permissions
-mkdir -p /opt/eosio/data/state
-mkdir -p /opt/eosio/data/state-history
-mkdir -p /opt/eosio/data/blocks
-mkdir -p /opt/eosio/data/snapshots
-mkdir -p /opt/eosio/config/protocol_features
-chown -R eosio:eosio /opt/eosio/data
-chown -R eosio:eosio /opt/eosio/config
+mkdir -p /opt/core/data/state
+mkdir -p /opt/core/data/state-history
+mkdir -p /opt/core/data/blocks
+mkdir -p /opt/core/data/snapshots
+mkdir -p /opt/core/config/protocol_features
+chown -R core:core /opt/core/data
+chown -R core:core /opt/core/config 2>/dev/null || true
 
-# If the first argument is nodeos, handle snapshot detection
-if [ "$1" = "nodeos" ]; then
+# If the first argument is core_netd, handle snapshot detection
+if [ "$1" = "core_netd" ]; then
     # Look for latest snapshot if state directory is empty
-    STATE_FILES=$(find /opt/eosio/data/state -name "shared_memory.bin" 2>/dev/null | head -1)
+    STATE_FILES=$(find /opt/core/data/state -name "shared_memory.bin" 2>/dev/null | head -1)
 
     if [ -z "$STATE_FILES" ]; then
         # No existing state — try to boot from snapshot
-        LATEST_SNAPSHOT=$(find /opt/eosio/data/snapshots -name "*.bin" -type f 2>/dev/null | sort -r | head -n 1)
+        LATEST_SNAPSHOT=$(find /opt/core/data/snapshots -name "*.bin" -type f 2>/dev/null | sort -r | head -n 1)
 
         if [ -n "$LATEST_SNAPSHOT" ]; then
             echo "No existing state found. Booting from snapshot: $(basename "$LATEST_SNAPSHOT")"
@@ -39,5 +39,5 @@ if [ "$1" = "nodeos" ]; then
     fi
 fi
 
-# Switch to eosio user and execute the command
-exec gosu eosio "$@"
+# Switch to core user and execute the command
+exec gosu core "$@"
