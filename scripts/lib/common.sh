@@ -131,7 +131,8 @@ ask_choice() {
     local default_index="${3:-1}"
     local count=${#_choices[@]}
 
-    echo -e "${CYAN}?${NC} ${prompt}"
+    # Display to stderr so menu is visible when stdout is captured by $()
+    echo -e "${CYAN}?${NC} ${prompt}" >&2
     local i
     for i in "${!_choices[@]}"; do
         local num=$((i + 1))
@@ -139,7 +140,7 @@ ask_choice() {
         if [[ "$num" -eq "$default_index" ]]; then
             marker="->"
         fi
-        echo -e "  ${marker} ${num}) ${_choices[$i]}"
+        echo -e "  ${marker} ${num}) ${_choices[$i]}" >&2
     done
 
     while true; do
@@ -169,18 +170,19 @@ ask_multi_select() {
         selected+=("0")
     done
 
-    echo -e "${CYAN}?${NC} ${prompt}"
-    echo "  Toggle items by entering their number. Press Enter with no input to confirm."
+    # Display to stderr so menu is visible when stdout is captured by $()
+    echo -e "${CYAN}?${NC} ${prompt}" >&2
+    echo "  Toggle items by entering their number. Press Enter with no input to confirm." >&2
 
     while true; do
-        echo ""
+        echo "" >&2
         for i in "${!_ms_choices[@]}"; do
             local num=$((i + 1))
             local checkbox="[ ]"
             if [[ "${selected[$i]}" == "1" ]]; then
                 checkbox="[x]"
             fi
-            echo "  ${num}) ${checkbox} ${_ms_choices[$i]}"
+            echo "  ${num}) ${checkbox} ${_ms_choices[$i]}" >&2
         done
 
         read -rp "  Toggle (1-${count}) or Enter to confirm: " answer

@@ -131,12 +131,14 @@ section_network() {
     local default_idx=1
     [[ "$prev" == "testnet" ]] && default_idx=2
 
-    local choices=("mainnet" "testnet")
+    local choices=("mainnet — Libre" "testnet — Libre")
     local selection
     selection="$(ask_choice "Which network will this node join?" choices "$default_idx")"
 
-    set_config NETWORK "$selection"
-    log_success "Network set to ${selection}"
+    # Extract the network key (first word) from the display label
+    local network="${selection%% *}"
+    set_config NETWORK "$network"
+    log_success "Network set to ${network} (${selection})"
 }
 
 # ---------------------------------------------------------------------------
