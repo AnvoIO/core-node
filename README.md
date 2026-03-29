@@ -326,10 +326,9 @@ Public snapshot providers are configured in `config/snapshot-providers.conf`:
 
 ```
 # provider | network | url
-EOSUSA|mainnet|http://snapshots.eosusa.io/snapshots/libre/latest.zst
-EOSUSA|testnet|http://seed01.eosusa.news/snaps/libretestnet/latest.zst
 GenerEOS|mainnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/libre/latest.bin.zst
-GenerEOS|testnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/core-testnet/latest.bin.zst
+GenerEOS|testnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/libre-testnet/latest.bin.zst
+EOSUSA|mainnet|http://snapshots.eosusa.io/snapshots/libre/latest.zst
 ```
 
 ## Troubleshooting
