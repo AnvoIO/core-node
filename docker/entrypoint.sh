@@ -21,6 +21,12 @@ if [ "$1" = "core_netd" ]; then
 
         if [ -n "$LATEST_SNAPSHOT" ]; then
             echo "No existing state found. Booting from snapshot: $(basename "$LATEST_SNAPSHOT")"
+
+            # Clean stale data dirs — snapshot boot requires no pre-existing
+            # blocks.log or state-history. Empty files from prior failed starts
+            # cause core_netd to crash.
+            rm -rf /opt/core/data/blocks/*
+            rm -rf /opt/core/data/state-history/*
             # Add --snapshot flag if not already present
             SNAPSHOT_FOUND=false
             for arg in "$@"; do
