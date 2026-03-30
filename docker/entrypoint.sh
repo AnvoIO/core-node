@@ -21,6 +21,14 @@ if [ "$1" = "core_netd" ]; then
 
         if [ -n "$LATEST_SNAPSHOT" ]; then
             echo "No existing state found. Booting from snapshot: $(basename "$LATEST_SNAPSHOT")"
+
+            # Clean stale data from prior runs — snapshot boot requires:
+            # - No pre-existing blocks.log (empty file causes crash)
+            # - No stale state-history
+            # - No stale protocol feature JSON (wrong digests from older binary versions)
+            rm -rf /opt/core/data/blocks/*
+            rm -rf /opt/core/data/state-history/*
+            rm -rf /opt/core/config/protocol_features/*
             # Add --snapshot flag if not already present
             SNAPSHOT_FOUND=false
             for arg in "$@"; do
@@ -31,7 +39,23 @@ if [ "$1" = "core_netd" ]; then
             done
 
             if [ "$SNAPSHOT_FOUND" = "false" ]; then
-                set -- "$@" --snapshot "$LATEST_SNAPSHOT"
+                # --snapshot is incompatible with --genesis-json (snapshot
+                # already contains genesis data). Strip --genesis-json and
+                # its value from the arguments.
+                NEW_ARGS=()
+                SKIP_NEXT=false
+                for arg in "$@"; do
+                    if [ "$SKIP_NEXT" = "true" ]; then
+                        SKIP_NEXT=false
+                        continue
+                    fi
+                    if [ "$arg" = "--genesis-json" ]; then
+                        SKIP_NEXT=true
+                        continue
+                    fi
+                    NEW_ARGS+=("$arg")
+                done
+                set -- "${NEW_ARGS[@]}" --snapshot "$LATEST_SNAPSHOT"
             fi
         else
             echo "No state or snapshots found. Node will sync from genesis."
