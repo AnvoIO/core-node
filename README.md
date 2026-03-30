@@ -194,7 +194,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 |-----|-------------|---------|
 | `NETWORK` | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Node role (see table above) | `producer` |
-| `CORE_VERSION` | AnvoIO Core version | `0.1.0-alpha` |
+| `CORE_VERSION` | AnvoIO Core version | `0.1.1-alpha` |
 | `CONTAINER_NAME` | Docker container name | `core-mainnet-producer` |
 | `STORAGE_PATH` | Base path for all node data | `/data/core-mainnet` |
 
