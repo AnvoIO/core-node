@@ -4,7 +4,7 @@ Guidance for AI coding assistants working on this repository.
 
 ## Project Overview
 
-Docker-based deployment system for Core blockchain nodes (mainnet/testnet) using [AnvoIO Core](https://github.com/AnvoIO/core). A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, core_netd config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates. Multi-arch: supports x86_64 and ARM64.
+Docker-based deployment system for Core blockchain nodes using [AnvoIO Core](https://github.com/AnvoIO/core). Currently testing on the Libre blockchain (mainnet/testnet). Core network configuration will be added when those networks launch. A single `node.conf` file drives all configuration — an interactive wizard creates it, and a generator produces Docker Compose, core_netd config.ini, genesis.json, logging profiles, and OpenResty gateway configs from templates. Multi-arch: supports x86_64 and ARM64.
 
 ## Architecture
 

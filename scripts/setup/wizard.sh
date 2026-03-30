@@ -1,10 +1,14 @@
 #!/bin/bash
 
 # =============================================================================
-# Core Node v3 — Interactive Setup Wizard
+# Core Node — Interactive Setup Wizard
 # =============================================================================
 # Walks the user through configuring a Core blockchain node and writes all
-# answers to a node.conf file.  Run with --help for usage information.
+# answers to a node.conf file. Currently configured for the Libre network
+# (mainnet/testnet) for testing. Core network options will be added when
+# those networks launch.
+#
+# Run with --help for usage information.
 #
 # Make executable:  chmod +x scripts/setup/wizard.sh
 # =============================================================================
@@ -1239,7 +1243,7 @@ show_summary() {
 main() {
     parse_args "$@"
 
-    log_header "Core Node v3 Setup Wizard"
+    log_header "Core Node Setup Wizard"
 
     # Load existing config if present
     if [[ -f "$CONFIG_PATH" ]]; then

@@ -2,6 +2,8 @@
 
 Docker-based deployment system for Core blockchain nodes using [AnvoIO Core](https://github.com/AnvoIO/core). Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring. Multi-arch: runs on both x86_64 and ARM64 (Apple Silicon).
 
+> **Project Status**: Currently testing the AnvoIO Core binary (`v0.1.1-alpha`) on the **Libre testnet**. The Core mainnet and testnet have not launched yet. Network configuration (chain IDs, peers, snapshot providers) currently points to Libre infrastructure. Core network configuration will be added when those networks launch.
+
 ## Quick Start
 
 ```bash
@@ -32,10 +34,12 @@ For non-interactive setup, edit `node.conf` directly and run:
 
 ## Network Information
 
-| Network | Chain ID |
-|---------|----------|
-| Mainnet | `38b1d7815474d0bf271d659c50b579893768b3b2c3dc6a14c4be6a7b3e14f2fb` |
-| Testnet | `b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee` |
+Currently configured for the Libre blockchain (used for testing the Core binary). Core network chain IDs will be added when those networks launch.
+
+| Network | Chain | Chain ID |
+|---------|-------|----------|
+| Mainnet | Libre | `38b1d7815474d0bf271d659c50b579893768b3b2c3dc6a14c4be6a7b3e14f2fb` |
+| Testnet | Libre | `b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee` |
 
 Ports, bind IP, and other settings are fully configurable through the wizard.
 
@@ -315,14 +319,14 @@ The wizard detects ports already in use on the host and warns before accepting a
 
 ## Peer Lists
 
-Peer lists are maintained in separate files for independent updates:
+Peer lists are maintained in separate files for independent updates. Currently configured with Libre network peers:
 
-- `config/peers-mainnet.conf` — format: `Name|host:port|Location`
-- `config/peers-testnet.conf` — same format
+- `config/peers-mainnet.conf` — Libre mainnet peers, format: `Name|host:port|Location`
+- `config/peers-testnet.conf` — Libre testnet peers, same format
 
 ## Snapshot Providers
 
-Public snapshot providers are configured in `config/snapshot-providers.conf`:
+Public snapshot providers are configured in `config/snapshot-providers.conf`. Currently configured with Libre snapshot sources:
 
 ```
 # provider | network | url
