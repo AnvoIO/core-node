@@ -16,6 +16,8 @@ services:
 {{TMPFS_VOLUMES}}
 {{EXTRA_VOLUMES}}
     network_mode: host
+    security_opt:
+      - seccomp:unconfined
     restart: {{RESTART_POLICY}}
     stop_grace_period: {{STOP_GRACE_PERIOD}}
 {{HEALTHCHECK}}

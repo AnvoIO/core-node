@@ -194,8 +194,7 @@ PRODUCER_BLOCK=""
 if [[ "$NODE_ROLE" == "producer" ]]; then
     PRODUCER_BLOCK="producer-name = ${PRODUCER_NAME}"$'\n'
     PRODUCER_BLOCK+="signature-provider = ${SIGNATURE_PROVIDER}"$'\n'
-    PRODUCER_BLOCK+="enable-stale-production = false"$'\n'
-    PRODUCER_BLOCK+="producer-threads = 2"
+    PRODUCER_BLOCK+="enable-stale-production = false"
 else
     PRODUCER_BLOCK="# Producer configuration not enabled for this role"
 fi

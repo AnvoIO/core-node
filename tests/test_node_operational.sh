@@ -214,7 +214,8 @@ enable-stale-production = true
 signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 
 chain-state-db-size-mb = 1024
-wasm-runtime = eos-vm-jit
+wasm-runtime = core-vm-jit
+vm-oc-enable = none
 
 max-transaction-time = 30
 abi-serializer-max-time-ms = 15000

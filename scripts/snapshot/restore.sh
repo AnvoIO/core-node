@@ -123,7 +123,7 @@ find_provider_snapshot() {
         local filename
         filename="snapshot-${provider,,}-$(date +%Y%m%d%H%M%S)"
 
-        if curl -fL -o "${snapshots_dir}/${filename}.zst" "$url" 2>/dev/null; then
+        if curl -fL --connect-timeout 10 --max-time 600 -o "${snapshots_dir}/${filename}.zst" "$url" 2>/dev/null; then
             log_info "Downloaded from ${provider}. Decompressing..."
 
             if ! command -v zstd &>/dev/null; then
@@ -164,7 +164,7 @@ download_url_snapshot() {
 
     # Determine if the file is zstd-compressed by extension
     if [[ "$url" == *.zst ]]; then
-        curl -fL -o "${snapshots_dir}/${filename}.zst" "$url" || {
+        curl -fL --connect-timeout 10 --max-time 600 -o "${snapshots_dir}/${filename}.zst" "$url" || {
             log_error "Failed to download from URL: ${url}"
             return 1
         }
@@ -183,7 +183,7 @@ download_url_snapshot() {
         }
         rm -f "${snapshots_dir}/${filename}.zst"
     else
-        curl -fL -o "${snapshots_dir}/${filename}.bin" "$url" || {
+        curl -fL --connect-timeout 10 --max-time 600 -o "${snapshots_dir}/${filename}.bin" "$url" || {
             log_error "Failed to download from URL: ${url}"
             return 1
         }

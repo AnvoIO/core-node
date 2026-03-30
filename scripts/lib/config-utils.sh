@@ -78,12 +78,17 @@ load_config() {
 
     CONFIG_FILE="$path"
 
-    # Source the file so variables are available in the caller's environment.
-    # We use set +u temporarily because the config file may reference unset vars.
-    set +u
-    # shellcheck disable=SC1090
-    source "$CONFIG_FILE"
-    set -u
+    # Sanitize: strip any lines that aren't comments, blanks, or KEY=value.
+    # This recovers gracefully from corrupt files (e.g. ANSI escape codes
+    # written by a previous buggy run).
+    local tmp
+    tmp="$(mktemp)"
+    grep -E '^[[:space:]]*(#|$)|^[A-Za-z_][A-Za-z0-9_]*=' "$CONFIG_FILE" > "$tmp" 2>/dev/null || true
+    if ! diff -q "$CONFIG_FILE" "$tmp" &>/dev/null; then
+        log_warn "Removed malformed lines from ${CONFIG_FILE}"
+        cp "$tmp" "$CONFIG_FILE"
+    fi
+    rm -f "$tmp"
 
     log_debug "Loaded configuration from ${CONFIG_FILE}"
 }
