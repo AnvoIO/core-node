@@ -580,15 +580,13 @@ section_snapshots() {
 
     # Map display labels to block counts (2 blocks/sec)
     local choices=(
-        "30 minutes"
-        "1 hour"
-        "4 hours"
-        "12 hours"
-        "24 hours"
+        "100,000 blocks (~14 hours)"
+        "200,000 blocks (~28 hours)"
+        "500,000 blocks (~3 days)"
     )
-    local -a block_counts=(3600 7200 28800 86400 172800)
+    local -a block_counts=(100000 200000 500000)
 
-    local default_idx=2  # 1 hour
+    local default_idx=1  # 100,000 blocks
     if [[ -n "$prev_interval" ]]; then
         local i
         for i in "${!block_counts[@]}"; do
