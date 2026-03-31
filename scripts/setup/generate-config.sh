@@ -203,8 +203,8 @@ fi
 BLOCKS_BLOCK=""
 case "$NODE_ROLE" in
     producer)
-        BLOCKS_BLOCK="blocks-log-stride = 1000"$'\n'
-        BLOCKS_BLOCK+="max-retained-block-files = 1"
+        BLOCKS_BLOCK="blocks-log-stride = 100000"$'\n'
+        BLOCKS_BLOCK+="max-retained-block-files = 10"
         ;;
     seed|full-api|full-history)
         BLOCKS_BLOCK="blocks-log-stride = 250000"$'\n'
@@ -288,10 +288,8 @@ case "$NODE_ROLE" in
         ;;
 esac
 
-# Handle pause-on-startup: true for producer, false otherwise
-if [[ "$NODE_ROLE" == "producer" ]]; then
-    CONFIG_CONTENT="$(echo "$CONFIG_CONTENT" | sed 's|^pause-on-startup = false|pause-on-startup = true|')"
-fi
+# pause-on-startup stays false for all roles — producers start producing
+# immediately when registered and voted in on-chain.
 
 write_file "${CONFIG_OUTPUT_DIR}/config.ini" "$CONFIG_CONTENT"
 
@@ -328,8 +326,10 @@ fi
 # Build HEALTHCHECK
 HEALTHCHECK_BLOCK=""
 if [[ "$NODE_ROLE" != "seed" ]]; then
+    HEALTHCHECK_HOST="${BIND_IP}"
+    [[ "$HEALTHCHECK_HOST" == "0.0.0.0" ]] && HEALTHCHECK_HOST="localhost"
     HEALTHCHECK_BLOCK="    healthcheck:
-      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:${HTTP_PORT}/v1/chain/get_info\"]
+      test: [\"CMD\", \"curl\", \"-f\", \"http://${HEALTHCHECK_HOST}:${HTTP_PORT}/v1/chain/get_info\"]
       interval: 30s
       timeout: 10s
       retries: 3
