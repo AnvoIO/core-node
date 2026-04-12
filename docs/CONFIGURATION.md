@@ -39,11 +39,12 @@ Defaults vary by role. These are set during wizard resource tuning.
 | Key | Required | Description |
 |-----|----------|-------------|
 | `STATE_IN_MEMORY` | Yes | `true` or `false` |
-| `STATE_TMPFS_SIZE` | No | Auto-calculated: `CHAIN_STATE_DB_SIZE + 10%`. Override if needed. |
 
-When `STATE_IN_MEMORY=true`, the chain state database is stored on a tmpfs mount (RAM). This protects SSDs from write wear but means state is lost on reboot — snapshot restore is required.
+When `STATE_IN_MEMORY=true`, core_netd is launched with `--database-map-mode locked`. At startup chainbase copies `shared_memory.bin` into an anonymous mmap (with huge pages if available) and `mlock2()`s it so the chain state cannot be swapped out. On clean shutdown the in-memory state is flushed back to `shared_memory.bin`.
 
-tmpfs is allocated on actual use, not reserved. A 22GB tmpfs with 10GB used only consumes ~10GB of RAM.
+After a hard crash the on-disk file is dirty-flagged; the docker entrypoint detects this and clears the state directory so the standard snapshot-restore path runs on the next start. Ensure automatic snapshot capture is configured (`SNAPSHOT_INTERVAL`) so a recent snapshot is available for recovery.
+
+Sizing comes from `CHAIN_STATE_DB_SIZE` — no separate tmpfs size. The host's `RLIMIT_MEMLOCK` must cover `CHAIN_STATE_DB_SIZE` plus some overhead, otherwise `mlock2()` fails at startup.
 
 ## Snapshots
 

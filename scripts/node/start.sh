@@ -133,7 +133,7 @@ main() {
 
     # Read key values
     local NETWORK NODE_ROLE CONTAINER_NAME STORAGE_PATH CORE_VERSION
-    local STATE_IN_MEMORY HTTP_PORT SNAPSHOT_INTERVAL BIND_IP P2P_PORT
+    local HTTP_PORT SNAPSHOT_INTERVAL BIND_IP P2P_PORT
     local S3_ENABLED
 
     NETWORK="$(get_config "NETWORK")"
@@ -141,7 +141,6 @@ main() {
     CONTAINER_NAME="$(get_config "CONTAINER_NAME")"
     STORAGE_PATH="$(get_config "STORAGE_PATH")"
     CORE_VERSION="$(get_config "CORE_VERSION" "$RECOMMENDED_CORE_VERSION")"
-    STATE_IN_MEMORY="$(get_config "STATE_IN_MEMORY" "false")"
     HTTP_PORT="$(get_config "HTTP_PORT")"
     P2P_PORT="$(get_config "P2P_PORT")"
     SNAPSHOT_INTERVAL="$(get_config "SNAPSHOT_INTERVAL" "1000")"
@@ -175,16 +174,15 @@ main() {
             "${PROJECT_DIR}/docker/"
     fi
 
-    # Check if we need a snapshot to boot (skip if --genesis)
+    # Check if we need a snapshot to boot (skip if --genesis).
+    # With --database-map-mode locked (STATE_IN_MEMORY=true), shared_memory.bin
+    # still persists across clean shutdowns; a missing file means either a
+    # fresh install or a hard crash the entrypoint has already cleaned up.
+    # Either way we want a snapshot if one is available.
     local need_snapshot="false"
     if [[ "$GENESIS_BOOT" != "true" ]]; then
         if [[ ! -f "${STORAGE_PATH}/data/state/shared_memory.bin" ]]; then
-            if [[ "$STATE_IN_MEMORY" == "true" ]]; then
-                need_snapshot="true"
-            elif [[ ! -d "${STORAGE_PATH}/data/state" ]] || \
-                 [[ -z "$(ls -A "${STORAGE_PATH}/data/state/" 2>/dev/null)" ]]; then
-                need_snapshot="true"
-            fi
+            need_snapshot="true"
         fi
     else
         log_info "Genesis boot requested — skipping snapshot restore."
