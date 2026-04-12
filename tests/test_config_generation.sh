@@ -200,11 +200,18 @@ if [[ -f "$COMPOSE_YML" ]]; then
         fail "compose: host networking missing"
     fi
 
-    # STATE_IN_MEMORY=true -> tmpfs mount
-    if grep -q 'tmpfs' "$COMPOSE_YML"; then
-        pass "compose: tmpfs volume for state-in-memory"
+    # STATE_IN_MEMORY=true -> --database-map-mode locked in core_netd command
+    if grep -q -- '--database-map-mode locked' "$COMPOSE_YML"; then
+        pass "compose: --database-map-mode locked for STATE_IN_MEMORY=true"
     else
-        fail "compose: tmpfs volume missing despite STATE_IN_MEMORY=true"
+        fail "compose: --database-map-mode locked missing despite STATE_IN_MEMORY=true"
+    fi
+
+    # No tmpfs mount — the native mode replaces the tmpfs hack.
+    if grep -q 'tmpfs' "$COMPOSE_YML"; then
+        fail "compose: unexpected tmpfs mount — should use --database-map-mode locked instead"
+    else
+        pass "compose: no tmpfs mount (STATE_IN_MEMORY handled natively)"
     fi
 fi
 

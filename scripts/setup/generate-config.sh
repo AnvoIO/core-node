@@ -79,7 +79,6 @@ P2P_PORT="$(get_config P2P_PORT)"
 SHIP_PORT="$(get_config SHIP_PORT "")"
 STORAGE_PATH="$(get_config STORAGE_PATH)"
 STATE_IN_MEMORY="$(get_config STATE_IN_MEMORY "false")"
-STATE_TMPFS_SIZE="$(get_config STATE_TMPFS_SIZE "")"
 LOG_PROFILE="$(get_config LOG_PROFILE "production")"
 CONTAINER_NAME="$(get_config CONTAINER_NAME)"
 AGENT_NAME="$(get_config AGENT_NAME)"
@@ -307,25 +306,24 @@ COMPOSE_TEMPLATE="$(cat "${TEMPLATE_DIR}/docker-compose.yml.tmpl")"
 # Build IMAGE_NAME
 IMAGE_NAME="core-node:${CORE_VERSION}"
 
-# Build CORE_COMMAND
+# Build CORE_COMMAND. When STATE_IN_MEMORY is true, use the native
+# --database-map-mode locked: at startup, chainbase copies shared_memory.bin
+# into an anonymous mmap with huge pages (if available) and mlock2()s it so
+# the chain state stays resident and cannot be swapped. On clean shutdown,
+# the database is written back to the file — no external tmpfs mount
+# required (see chainbase::pinnable_mapped_file::map_mode).
 CORE_COMMAND="      core_netd
       --config-dir /opt/core/config
       --data-dir /opt/core/data
       --genesis-json /opt/core/config/genesis.json"
-
-# Build TMPFS_VOLUMES (state only — blocks are sequential writes, SSD-safe)
-TMPFS_BLOCK=""
 if [[ "$STATE_IN_MEMORY" == "true" ]]; then
-    # Auto-calculate from CHAIN_STATE_DB_SIZE if STATE_TMPFS_SIZE not explicitly set
-    if [[ -z "$STATE_TMPFS_SIZE" ]]; then
-        STATE_TMPFS_SIZE="$(calc_state_tmpfs_size "$CHAIN_STATE_DB_SIZE")"
-        log_info "Auto-calculated STATE_TMPFS_SIZE=${STATE_TMPFS_SIZE} from CHAIN_STATE_DB_SIZE=${CHAIN_STATE_DB_SIZE}MB + 10%"
-    fi
-    TMPFS_BLOCK="      - type: tmpfs
-        target: /opt/core/data/state
-        tmpfs:
-          size: ${STATE_TMPFS_SIZE}"
+    CORE_COMMAND+=$'\n'"      --database-map-mode locked"
 fi
+
+# TMPFS_VOLUMES: no longer needed — state-in-memory is handled natively by
+# core_netd. Kept as a placeholder so existing templates still substitute
+# cleanly, but always empty.
+TMPFS_BLOCK=""
 
 # Build HEALTHCHECK
 HEALTHCHECK_BLOCK=""
@@ -340,7 +338,9 @@ if [[ "$NODE_ROLE" != "seed" ]]; then
       start_period: 60s"
 fi
 
-# Build ENVIRONMENT
+# Build ENVIRONMENT. STATE_IN_MEMORY is surfaced to the container so
+# entrypoint/ops scripts can detect it (e.g. for snapshot-restore on
+# container recreate when no persisted file exists yet).
 ENVIRONMENT_BLOCK="    environment:
       - NODE_ROLE=${NODE_ROLE}
       - NETWORK=${NETWORK}"

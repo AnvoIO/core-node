@@ -35,8 +35,8 @@ ss -tlnp | grep :9888
 # Change HTTP_PORT in node.conf and regenerate
 ```
 
-**Missing snapshot (state-in-memory mode):**
-The node needs a snapshot to boot when `STATE_IN_MEMORY=true`. The start script tries: local → S3 → custom URL → public providers. If all fail:
+**Missing snapshot after crash recovery:**
+When the docker entrypoint detects a dirty `shared_memory.bin` (hard crash), it clears state and needs a snapshot to rebuild. The start script tries: local → S3 → custom URL → public providers. If all fail:
 ```bash
 ./scripts/snapshot/restore.sh --url https://your-snapshot-url/latest.zst
 ./scripts/node/start.sh
@@ -58,7 +58,7 @@ curl -s http://localhost:9888/v1/net/connections | jq 'length'
 
 ### High memory usage
 
-If `STATE_IN_MEMORY=true`, the chain state DB lives in RAM. Expected usage is up to `CHAIN_STATE_DB_SIZE` MB. If it exceeds the tmpfs allocation, the node will crash. Increase `CHAIN_STATE_DB_SIZE` in `node.conf` and regenerate (tmpfs auto-adjusts).
+If `STATE_IN_MEMORY=true`, the chain state DB lives in an anonymous mmap pinned by `mlock2()`. Expected usage is up to `CHAIN_STATE_DB_SIZE` MB. If it exceeds the configured size, the node will crash. Increase `CHAIN_STATE_DB_SIZE` in `node.conf` and regenerate. Ensure the host's `RLIMIT_MEMLOCK` (`ulimit -l`) covers the configured size — otherwise `mlock2()` fails at startup and the node will not come up.
 
 ### Database corruption
 

@@ -176,11 +176,9 @@ if [[ "$NODE_ROLE" == "light-api" ]]; then
     require_key "MAX_RETAINED_BLOCK_FILES"
 fi
 
-# Conditional feature keys
-if [[ "$STATE_IN_MEMORY" == "true" ]]; then
-    # STATE_TMPFS_SIZE is optional — auto-calculated from CHAIN_STATE_DB_SIZE if absent
-    :
-fi
+# STATE_IN_MEMORY=true has no extra required keys. core_netd runs with
+# --database-map-mode locked and sizes the anonymous mapping from the
+# existing CHAIN_STATE_DB_SIZE resource key; no separate tmpfs size.
 
 if [[ "$S3_ENABLED" == "true" ]]; then
     require_key "S3_REMOTE"

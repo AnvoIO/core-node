@@ -257,15 +257,6 @@ get_default_resources() {
     esac
 }
 
-# ---------------------------------------------------------------------------
-# calc_state_tmpfs_size "chain_state_db_size_mb"
-# Returns tmpfs size string (e.g. "18G") = CHAIN_STATE_DB_SIZE + 10% headroom.
-# tmpfs is allocated on use, so the headroom costs nothing until filled.
-# ---------------------------------------------------------------------------
-calc_state_tmpfs_size() {
-    local db_size_mb="$1"
-    # Add 10% headroom, convert to GB (rounded up)
-    local total_mb=$(( db_size_mb + db_size_mb / 10 ))
-    local total_gb=$(( (total_mb + 1023) / 1024 ))
-    echo "${total_gb}G"
-}
+# calc_state_tmpfs_size removed: STATE_IN_MEMORY=true now uses
+# core_netd --database-map-mode locked (chainbase native anon-mmap + mlock),
+# which sizes itself from CHAIN_STATE_DB_SIZE directly — no tmpfs mount.

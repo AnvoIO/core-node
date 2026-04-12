@@ -68,7 +68,7 @@ wizard.sh → node.conf → generate-config.sh → config.ini
 
 ### Key Features
 
-- **State-in-memory (tmpfs)**: Chain state stored in RAM to protect SSDs from write wear. tmpfs size is auto-calculated from `CHAIN_STATE_DB_SIZE` + 10% headroom (allocated on use, not reserved).
+- **State-in-memory (`--database-map-mode locked`)**: Chain state pinned in RAM via chainbase's native anonymous mmap + `mlock2()` — protects SSDs from write wear, immune to swap. State is flushed to `shared_memory.bin` on clean shutdown; the entrypoint handles hard-crash recovery by detecting the dirty flag and restoring from the newest snapshot.
 - **chain snapshot scheduling**: Periodic chain snapshots via the producer API (`/v1/producer/schedule_snapshot`).
 - **S3 archival**: Streaming backup and recovery to S3-compatible storage using rclone with zstd compression (`tar | zstd | rclone rcat` for upload, `rclone cat | zstd -d | tar -x` for download — no intermediate files).
 - **BTRFS filesystem snapshots**: Consistent full-node backups with minimal downtime (stop → BTRFS snapshot → start → upload from snapshot).
@@ -225,8 +225,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 
 | Key | Description |
 |-----|-------------|
-| `STATE_IN_MEMORY` | `true` to use tmpfs for chain state |
-| `STATE_TMPFS_SIZE` | Auto-calculated: `CHAIN_STATE_DB_SIZE` + 10% (optional override) |
+| `STATE_IN_MEMORY` | `true` to pin chain state in RAM via `core_netd --database-map-mode locked` |
 
 ### Operational Settings
 

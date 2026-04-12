@@ -527,7 +527,7 @@ section_storage() {
 }
 
 # ---------------------------------------------------------------------------
-# 8. State memory (tmpfs)
+# 8. State memory (anon mmap + mlock via --database-map-mode locked)
 # ---------------------------------------------------------------------------
 section_state_memory() {
     log_header "Chain State Storage"
@@ -540,28 +540,18 @@ section_state_memory() {
     local default_yn="y"
     [[ "$prev_in_mem" == "false" ]] && default_yn="n"
 
-    echo "  Storing chain state in memory (tmpfs) protects SSDs from excessive"
-    echo "  write wear, but data is lost on reboot and requires a snapshot restore."
+    echo "  Keeping chain state resident in RAM (core_netd --database-map-mode"
+    echo "  locked) protects SSDs from write wear and avoids page-cache churn."
+    echo "  State is flushed to shared_memory.bin on clean shutdown; after a"
+    echo "  hard crash the entrypoint auto-restores from the newest snapshot."
     echo ""
 
-    if ask_yes_no "Store chain state in memory (tmpfs)?" "$default_yn"; then
+    if ask_yes_no "Keep chain state in RAM (locked mmap)?" "$default_yn"; then
         set_config STATE_IN_MEMORY "true"
-
-        # Auto-calculate tmpfs size from CHAIN_STATE_DB_SIZE + 10% headroom
-        local db_size_mb
-        db_size_mb="$(get_config CHAIN_STATE_DB_SIZE "")"
-        if [[ -n "$db_size_mb" ]]; then
-            local tmpfs_size
-            tmpfs_size="$(calc_state_tmpfs_size "$db_size_mb")"
-            set_config STATE_TMPFS_SIZE "$tmpfs_size"
-            log_info "State tmpfs size auto-set to ${tmpfs_size} (CHAIN_STATE_DB_SIZE ${db_size_mb}MB + 10% headroom)"
-        else
-            log_warn "CHAIN_STATE_DB_SIZE not yet set — tmpfs size will be calculated during config generation."
-        fi
-
         echo ""
-        log_warn "With tmpfs, chain state will be lost if the server reboots."
-        echo "  Ensure automatic snapshot restore is configured for recovery."
+        log_info "core_netd will start with --database-map-mode locked."
+        log_warn "Ensure the host has enough RLIMIT_MEMLOCK for CHAIN_STATE_DB_SIZE,"
+        echo "  and that automatic snapshot capture is configured for hard-crash recovery."
     else
         set_config STATE_IN_MEMORY "false"
     fi

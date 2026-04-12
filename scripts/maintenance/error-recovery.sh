@@ -409,7 +409,8 @@ fix() {
     if [[ "$has_oom" == "true" ]]; then
         log_warn "Out-of-memory patterns detected in logs."
         log_info "This typically requires increasing available RAM or adjusting node configuration."
-        log_info "Consider setting STATE_IN_MEMORY=false in node.conf if memory is limited."
+        log_info "Consider setting STATE_IN_MEMORY=false in node.conf if memory is limited"
+        log_info "(that lets core_netd use --database-map-mode mapped, paging state from disk)."
         confirm_action "Restart the container to recover from OOM"
 
         stop_node
