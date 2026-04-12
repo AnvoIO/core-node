@@ -8,7 +8,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets these int
 |-----|----------|-------------|---------|
 | `NETWORK` | Yes | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Yes | `producer`, `seed`, `light-api`, `full-api`, `full-history` | `producer` |
-| `CORE_VERSION` | Yes | AnvoIO Core version | `0.1.2-alpha` |
+| `CORE_VERSION` | Yes | AnvoIO Core version | `0.1.3-alpha` |
 | `CONTAINER_NAME` | Yes | Docker container name | `core-mainnet-producer` |
 | `AGENT_NAME` | Yes | Identifier for alerts/metrics | `core-mainnet` |
 | `STORAGE_PATH` | Yes | Base path for node data (must be BTRFS) | `/data/core-mainnet` |

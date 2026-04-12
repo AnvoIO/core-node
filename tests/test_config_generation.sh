@@ -53,7 +53,7 @@ mkdir -p "$STORAGE_1"
 cat > "${WORK_DIR}/node-mainnet.conf" <<'CONF'
 NETWORK=mainnet
 NODE_ROLE=full-api
-CORE_VERSION=0.1.2-alpha
+CORE_VERSION=0.1.3-alpha
 BIND_IP=0.0.0.0
 HTTP_PORT=8888
 P2P_PORT=9876
@@ -182,7 +182,7 @@ if [[ -f "$COMPOSE_YML" ]]; then
         fail "compose: container_name incorrect"
     fi
 
-    if grep -q 'image: core-node:0.1.2-alpha' "$COMPOSE_YML"; then
+    if grep -q 'image: core-node:0.1.3-alpha' "$COMPOSE_YML"; then
         pass "compose: image tag correct"
     else
         fail "compose: image tag incorrect"
@@ -231,7 +231,7 @@ mkdir -p "$STORAGE_2"
 cat > "${WORK_DIR}/node-testnet.conf" <<CONF
 NETWORK=testnet
 NODE_ROLE=producer
-CORE_VERSION=0.1.2-alpha
+CORE_VERSION=0.1.3-alpha
 BIND_IP=127.0.0.1
 HTTP_PORT=9889
 P2P_PORT=9877
@@ -322,7 +322,7 @@ mkdir -p "$STORAGE_3"
 cat > "${WORK_DIR}/node-seed.conf" <<CONF
 NETWORK=mainnet
 NODE_ROLE=seed
-CORE_VERSION=0.1.2-alpha
+CORE_VERSION=0.1.3-alpha
 BIND_IP=0.0.0.0
 P2P_PORT=9876
 CONTAINER_NAME=core-mainnet-seed

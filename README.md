@@ -2,7 +2,7 @@
 
 Docker-based deployment system for Core blockchain nodes using [AnvoIO Core](https://github.com/AnvoIO/core). Supports block producers, API nodes, seed relays, and full-history nodes with automated configuration, snapshot management, S3 archival, and monitoring. Multi-arch: runs on both x86_64 and ARM64 (Apple Silicon).
 
-> **Project Status**: Currently testing the AnvoIO Core binary (`v0.1.2-alpha`) on the **Libre testnet**. The Core mainnet and testnet have not launched yet. Network configuration (chain IDs, peers, snapshot providers) currently points to Libre infrastructure. Core network configuration will be added when those networks launch.
+> **Project Status**: Currently testing the AnvoIO Core binary (`v0.1.3-alpha`) on the **Libre testnet**. The Core mainnet and testnet have not launched yet. Network configuration (chain IDs, peers, snapshot providers) currently points to Libre infrastructure. Core network configuration will be added when those networks launch.
 
 ## Quick Start
 
@@ -198,7 +198,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 |-----|-------------|---------|
 | `NETWORK` | `mainnet` or `testnet` | `mainnet` |
 | `NODE_ROLE` | Node role (see table above) | `producer` |
-| `CORE_VERSION` | AnvoIO Core version | `0.1.2-alpha` |
+| `CORE_VERSION` | AnvoIO Core version | `0.1.3-alpha` |
 | `CONTAINER_NAME` | Docker container name | `core-mainnet-producer` |
 | `STORAGE_PATH` | Base path for all node data | `/data/core-mainnet` |
 

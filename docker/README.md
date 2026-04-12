@@ -4,19 +4,19 @@
 
 The Dockerfile builds a multi-arch node image based on Ubuntu 24.04 with:
 
-- AnvoIO Core v0.1.2-alpha (core_netd, core-cli, core-wallet, core-util)
+- AnvoIO Core v0.1.3-alpha (core_netd, core-cli, core-wallet, core-util)
 - jq, zstd, btrfs-progs, socat, gosu, cron, rclone
 
 Supports both `amd64` (x86_64) and `arm64` (Apple Silicon / AArch64) via Docker buildx.
 
-Build argument `CORE_VERSION` controls the AnvoIO Core version (default: `0.1.2-alpha`).
+Build argument `CORE_VERSION` controls the AnvoIO Core version (default: `0.1.3-alpha`).
 
 ```bash
 # Native architecture
-docker build -t core-node:0.1.2-alpha -f docker/Dockerfile docker/
+docker build -t core-node:0.1.3-alpha -f docker/Dockerfile docker/
 
 # Cross-platform (amd64 + arm64)
-docker buildx build --platform linux/amd64,linux/arm64 -t core-node:0.1.2-alpha -f docker/Dockerfile docker/
+docker buildx build --platform linux/amd64,linux/arm64 -t core-node:0.1.3-alpha -f docker/Dockerfile docker/
 ```
 
 The start script (`scripts/node/start.sh`) builds the image automatically if it doesn't exist.
