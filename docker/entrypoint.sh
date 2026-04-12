@@ -12,6 +12,27 @@ chown -R core:core /opt/core/config 2>/dev/null || true
 
 # If the first argument is core_netd, handle snapshot detection
 if [ "$1" = "core_netd" ]; then
+    STATE_FILE="/opt/core/data/state/shared_memory.bin"
+
+    # Dirty-shutdown recovery. chainbase marks shared_memory.bin with a
+    # dirty flag (single byte at offset 8, see environment.hpp:106) on
+    # startup and clears it on clean shutdown. If the process is SIGKILLed
+    # or the host loses power, the flag stays set and chainbase refuses to
+    # open the db on next start. For STATE_IN_MEMORY=true (--database-map-mode
+    # locked) this is the normal crash path since the in-memory state was
+    # lost anyway. Treat dirty state as "no state" so the snapshot-restore
+    # branch below handles recovery uniformly.
+    if [ -f "$STATE_FILE" ]; then
+        DIRTY_BYTE=$(dd if="$STATE_FILE" bs=1 count=1 skip=8 2>/dev/null | od -An -tu1 | tr -d ' \n')
+        if [ "$DIRTY_BYTE" != "0" ] && [ -n "$DIRTY_BYTE" ]; then
+            echo "Detected dirty chain state (shared_memory.bin dirty byte=${DIRTY_BYTE})."
+            echo "Last shutdown did not flush cleanly — clearing state for snapshot-restore recovery."
+            rm -f "$STATE_FILE"
+            rm -f /opt/core/data/state/chain_head.dat
+            rm -rf /opt/core/data/blocks/reversible
+        fi
+    fi
+
     # Look for latest snapshot if state directory is empty
     STATE_FILES=$(find /opt/core/data/state -name "shared_memory.bin" 2>/dev/null | head -1)
 
