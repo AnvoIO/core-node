@@ -22,12 +22,18 @@ if [ "$1" = "core_netd" ]; then
         if [ -n "$LATEST_SNAPSHOT" ]; then
             echo "No existing state found. Booting from snapshot: $(basename "$LATEST_SNAPSHOT")"
 
-            # Clean stale data from prior runs — snapshot boot requires:
-            # - No pre-existing blocks.log (empty file causes crash)
-            # - No stale state-history
-            # - No stale protocol feature JSON (wrong digests from older binary versions)
-            rm -rf /opt/core/data/blocks/*
-            rm -rf /opt/core/data/state-history/*
+            # Clean stale head data from prior runs — snapshot boot requires
+            # no pre-existing head blocks.log or state-history logs (empty or
+            # mismatched files cause crashes). Retained directories (archived
+            # block/state-history slices) are preserved — they contain valid
+            # historical data that the node will continue building on.
+            rm -f /opt/core/data/blocks/blocks.log
+            rm -f /opt/core/data/blocks/blocks.index
+            rm -rf /opt/core/data/blocks/reversible
+            rm -f /opt/core/data/state-history/chain_state_history.log
+            rm -f /opt/core/data/state-history/chain_state_history.index
+            rm -f /opt/core/data/state-history/trace_history.log
+            rm -f /opt/core/data/state-history/trace_history.index
             rm -rf /opt/core/config/protocol_features/*
             # Add --snapshot flag if not already present
             SNAPSHOT_FOUND=false

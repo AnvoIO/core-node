@@ -105,6 +105,7 @@ CF_TUNNEL_ENABLED="$(get_config CF_TUNNEL_ENABLED "false")"
 CF_TUNNEL_TOKEN="$(get_config CF_TUNNEL_TOKEN "")"
 BLOCKS_LOG_STRIDE="$(get_config BLOCKS_LOG_STRIDE "")"
 MAX_RETAINED_BLOCK_FILES="$(get_config MAX_RETAINED_BLOCK_FILES "")"
+TRACE_API_MODE="$(get_config TRACE_API_MODE "raw")"
 
 # ---------------------------------------------------------------------------
 # Output directory setup
@@ -172,6 +173,9 @@ if [[ "$NODE_ROLE" == "full-api" || "$NODE_ROLE" == "full-history" ]]; then
     STATE_HISTORY_BLOCK+="state-history-retained-dir = retained"
     if [[ "$NODE_ROLE" == "full-history" ]]; then
         STATE_HISTORY_BLOCK+=$'\n'"trace-slice-stride = 250000"
+        if [[ "$TRACE_API_MODE" == "raw" ]]; then
+            STATE_HISTORY_BLOCK+=$'\n'"trace-no-abis = true"
+        fi
     fi
 else
     STATE_HISTORY_BLOCK="# State history not enabled for this role"

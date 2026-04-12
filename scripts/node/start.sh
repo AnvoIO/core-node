@@ -7,7 +7,11 @@ set -euo pipefail
 # Starts the Core blockchain node container, building the Docker image and
 # restoring a snapshot if needed.
 #
-# Usage: start.sh [path/to/node.conf]
+# Usage: start.sh [path/to/node.conf] [--genesis]
+#
+# Options:
+#   --genesis   Boot from genesis.json instead of restoring a snapshot.
+#               Use for initial full-history sync from block 1.
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -112,9 +116,19 @@ wait_for_api() {
 main() {
     log_header "Core Node — Start"
 
+    # Parse arguments
+    local GENESIS_BOOT=false
+    local config_arg=""
+    for arg in "$@"; do
+        case "$arg" in
+            --genesis) GENESIS_BOOT=true ;;
+            *)         config_arg="$arg" ;;
+        esac
+    done
+
     # Load configuration
     local config_path
-    config_path="$(find_config "${1:-}")"
+    config_path="$(find_config "$config_arg")"
     load_config "$config_path"
 
     # Read key values
@@ -161,15 +175,19 @@ main() {
             "${PROJECT_DIR}/docker/"
     fi
 
-    # Check if we need a snapshot to boot
+    # Check if we need a snapshot to boot (skip if --genesis)
     local need_snapshot="false"
-    if [[ ! -f "${STORAGE_PATH}/data/state/shared_memory.bin" ]]; then
-        if [[ "$STATE_IN_MEMORY" == "true" ]]; then
-            need_snapshot="true"
-        elif [[ ! -d "${STORAGE_PATH}/data/state" ]] || \
-             [[ -z "$(ls -A "${STORAGE_PATH}/data/state/" 2>/dev/null)" ]]; then
-            need_snapshot="true"
+    if [[ "$GENESIS_BOOT" != "true" ]]; then
+        if [[ ! -f "${STORAGE_PATH}/data/state/shared_memory.bin" ]]; then
+            if [[ "$STATE_IN_MEMORY" == "true" ]]; then
+                need_snapshot="true"
+            elif [[ ! -d "${STORAGE_PATH}/data/state" ]] || \
+                 [[ -z "$(ls -A "${STORAGE_PATH}/data/state/" 2>/dev/null)" ]]; then
+                need_snapshot="true"
+            fi
         fi
+    else
+        log_info "Genesis boot requested — skipping snapshot restore."
     fi
 
     if [[ "$need_snapshot" == "true" ]]; then
