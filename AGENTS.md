@@ -28,7 +28,7 @@ All scripts source from `scripts/lib/`:
 
 - **common.sh** — Logging (log_info/warn/error/success/debug/header), user prompts (ask_yes_no/ask_input/ask_choice/ask_multi_select), validators (validate_ip/port/url/path/btrfs/not_empty), utilities (detect_interfaces/check_port_available/require_command/require_root). Has a double-source guard via `_COMMON_SH_LOADED`. Sets `PROJECT_DIR` to repo root. Uses `_COMMON_LIB_DIR` internally (not `SCRIPT_DIR`) to avoid overwriting the caller's SCRIPT_DIR.
 - **config-utils.sh** — node.conf read/write: load_config, get_config, set_config, config_exists, remove_config, list_config, backup_config, new_config. Also works as CLI: `config-utils.sh -f node.conf get KEY`.
-- **network-defaults.sh** — Network constants: get_chain_id, get_default_ports, get_genesis_json, get_default_plugins (per role), get_default_resources (per role), calc_state_tmpfs_size. `RECOMMENDED_CORE_VERSION="0.1.1-alpha"`.
+- **network-defaults.sh** — Network constants: get_chain_id, get_default_ports, get_genesis_json, get_default_plugins (per role), get_default_resources (per role), calc_state_tmpfs_size. `RECOMMENDED_CORE_VERSION="0.1.2-alpha"`.
 
 ### Node Roles and Plugins
 
