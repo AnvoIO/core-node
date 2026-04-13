@@ -213,6 +213,13 @@ if [[ -f "$COMPOSE_YML" ]]; then
     else
         pass "compose: no tmpfs mount (STATE_IN_MEMORY handled natively)"
     fi
+
+    # --database-map-mode locked needs RLIMIT_MEMLOCK=unlimited in the container.
+    if grep -qE 'memlock:\s*$' "$COMPOSE_YML" && grep -qE 'soft:\s*-1' "$COMPOSE_YML"; then
+        pass "compose: memlock ulimit set for --database-map-mode locked"
+    else
+        fail "compose: memlock ulimit missing — mlock2() will fail for locked mode"
+    fi
 fi
 
 # --- Check genesis.json ---
