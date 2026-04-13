@@ -325,6 +325,18 @@ fi
 # cleanly, but always empty.
 TMPFS_BLOCK=""
 
+# Ulimits. --database-map-mode locked calls mlock2() on the entire state
+# region (up to CHAIN_STATE_DB_SIZE MiB). Docker's default RLIMIT_MEMLOCK
+# is typically 64 KiB which will cause startup to fail. Set memlock to
+# unlimited (-1) when STATE_IN_MEMORY=true so the container can pin state.
+ULIMITS_BLOCK=""
+if [[ "$STATE_IN_MEMORY" == "true" ]]; then
+    ULIMITS_BLOCK="    ulimits:
+      memlock:
+        soft: -1
+        hard: -1"
+fi
+
 # Build HEALTHCHECK
 HEALTHCHECK_BLOCK=""
 if [[ "$NODE_ROLE" != "seed" ]]; then
@@ -405,6 +417,7 @@ COMPOSE_CONTENT="$(echo "$COMPOSE_CONTENT" | sed "s|{{STOP_GRACE_PERIOD}}|30m|g"
 COMPOSE_CONTENT="$(replace_placeholder "{{CORE_COMMAND}}" "$CORE_COMMAND" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{TMPFS_VOLUMES}}" "$TMPFS_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{EXTRA_VOLUMES}}" "" "$COMPOSE_CONTENT")"
+COMPOSE_CONTENT="$(replace_placeholder "{{ULIMITS}}" "$ULIMITS_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{HEALTHCHECK}}" "$HEALTHCHECK_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{ENVIRONMENT}}" "$ENVIRONMENT_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{GATEWAY_SERVICE}}" "$GATEWAY_BLOCK" "$COMPOSE_CONTENT")"
