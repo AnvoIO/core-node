@@ -75,6 +75,15 @@ agent-name = "{{AGENT_NAME}}"
 sync-fetch-span = 10000
 
 # ==============================================================================
+# P2P Encryption
+# ==============================================================================
+# Encrypted transport negotiates ephemeral ECDH keys per connection.
+# enable = true lets peers that support the encrypted_transport protocol
+# version negotiate it, while still falling back to plaintext with peers
+# that do not. require = true additionally refuses plaintext peers.
+{{ENCRYPTION_CONFIG}}
+
+# ==============================================================================
 # Access Control
 # ==============================================================================
 # Settings vary by role:
