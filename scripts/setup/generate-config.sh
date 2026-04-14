@@ -74,6 +74,11 @@ NETWORK="$(get_config NETWORK)"
 NODE_ROLE="$(get_config NODE_ROLE)"
 CORE_VERSION="$(get_config CORE_VERSION)"
 BIND_IP="$(get_config BIND_IP)"
+# Optional IPv6 p2p listen address. When set, the generator emits a
+# second p2p-listen-endpoint line bound to the v6 address on the same
+# P2P_PORT. core_netd's net_plugin supports multiple p2p-listen-endpoint
+# entries natively — one TCP listener per entry. Leave empty for v4-only.
+P2P_BIND_IP_V6="$(get_config P2P_BIND_IP_V6 "")"
 HTTP_PORT="$(get_config HTTP_PORT "")"
 P2P_PORT="$(get_config P2P_PORT)"
 SHIP_PORT="$(get_config SHIP_PORT "")"
@@ -248,6 +253,16 @@ if [[ "$REQUIRE_ENCRYPTION" == "true" ]]; then
     ENCRYPTION_BLOCK+=$'\n'"p2p-require-encryption = true"
 fi
 
+# --- Build P2P_LISTEN block ---
+# Always emit an IPv4 endpoint at BIND_IP:P2P_PORT. When P2P_BIND_IP_V6
+# is set, emit a second bracketed IPv6 endpoint on the same port.
+# core_netd's net_plugin accepts multiple p2p-listen-endpoint lines and
+# opens one TCP listener per entry.
+P2P_LISTEN_BLOCK="p2p-listen-endpoint = ${BIND_IP}:${P2P_PORT}"
+if [[ -n "$P2P_BIND_IP_V6" ]]; then
+    P2P_LISTEN_BLOCK+=$'\n'"p2p-listen-endpoint = [${P2P_BIND_IP_V6}]:${P2P_PORT}"
+fi
+
 # --- Perform substitutions ---
 # Single-line placeholder replacements with sed
 CONFIG_CONTENT="$CONFIG_TEMPLATE"
@@ -282,6 +297,7 @@ replace_placeholder() {
 }
 
 CONFIG_CONTENT="$(replace_placeholder "{{PLUGINS}}" "$PLUGINS_BLOCK" "$CONFIG_CONTENT")"
+CONFIG_CONTENT="$(replace_placeholder "{{P2P_LISTEN}}" "$P2P_LISTEN_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{STATE_HISTORY_CONFIG}}" "$STATE_HISTORY_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{PEERS}}" "$PEERS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{PRODUCER_CONFIG}}" "$PRODUCER_BLOCK" "$CONFIG_CONTENT")"
