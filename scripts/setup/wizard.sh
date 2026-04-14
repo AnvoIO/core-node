@@ -40,6 +40,7 @@ REQUIRED_KEYS=(
     STORAGE_PATH STATE_IN_MEMORY SNAPSHOT_INTERVAL SNAPSHOT_RETENTION
     LOG_PROFILE API_GATEWAY_ENABLED FIREWALL_ENABLED WEBHOOK_ENABLED
     PROMETHEUS_ENABLED AGENT_NAME CONTAINER_NAME RESTART_POLICY
+    ENABLE_ENCRYPTION
 )
 
 # ---------------------------------------------------------------------------
@@ -480,6 +481,39 @@ section_peers() {
 
     set_config PEERS "$peers_csv"
     log_success "Configured ${#selected_peers[@]} peer(s)"
+}
+
+# ---------------------------------------------------------------------------
+# 6b. P2P Encryption
+# ---------------------------------------------------------------------------
+section_p2p_encryption() {
+    log_header "P2P Encryption"
+
+    local prev_enable prev_require
+    prev_enable="$(get_config ENABLE_ENCRYPTION "")"
+    prev_require="$(get_config REQUIRE_ENCRYPTION "")"
+
+    local enable_default="y"
+    [[ "$prev_enable" == "false" ]] && enable_default="n"
+
+    if ask_yes_no "Enable encrypted P2P transport (negotiates ECDH per connection, falls back to plaintext with peers that don't support it)?" "$enable_default"; then
+        set_config ENABLE_ENCRYPTION "true"
+
+        local require_default="n"
+        [[ "$prev_require" == "true" ]] && require_default="y"
+
+        if ask_yes_no "Require encryption (reject connections to peers that do not support it)?" "$require_default"; then
+            set_config REQUIRE_ENCRYPTION "true"
+            log_info "Peers without encryption support will be refused."
+        else
+            set_config REQUIRE_ENCRYPTION "false"
+        fi
+    else
+        set_config ENABLE_ENCRYPTION "false"
+        set_config REQUIRE_ENCRYPTION "false"
+    fi
+
+    log_success "P2P encryption configuration saved"
 }
 
 # ---------------------------------------------------------------------------
@@ -1269,6 +1303,7 @@ main() {
     section_bind_ip
     section_ports
     section_peers
+    section_p2p_encryption
     section_storage
     section_state_memory
     section_snapshots

@@ -172,6 +172,21 @@ if [[ -f "$CONFIG_INI" ]]; then
     else
         fail "config.ini: state-history-endpoint incorrect"
     fi
+
+    # Encryption defaults (when keys are omitted from node.conf):
+    # enable=true so new nodes negotiate encryption with peers that support it.
+    # require is absent unless explicitly set — plaintext peers still work.
+    if grep -q '^p2p-enable-encryption = true' "$CONFIG_INI"; then
+        pass "config.ini: p2p-enable-encryption defaults to true when omitted"
+    else
+        fail "config.ini: p2p-enable-encryption default missing or wrong"
+    fi
+
+    if grep -q '^p2p-require-encryption' "$CONFIG_INI"; then
+        fail "config.ini: p2p-require-encryption should be absent when not requested"
+    else
+        pass "config.ini: p2p-require-encryption correctly absent when not requested"
+    fi
 fi
 
 # --- Check docker-compose.yml content ---
@@ -378,6 +393,112 @@ if [[ -f "$CONFIG_INI_3" ]]; then
     else
         fail "config.ini: net_plugin missing for seed"
     fi
+fi
+
+echo ""
+
+# =============================================================================
+# Test Suite 4b: P2P encryption knobs
+# =============================================================================
+echo "--- Test Suite 4b: p2p encryption ---"
+
+# 4b.1 — explicit require=true implies enable=true
+STORAGE_4A="${WORK_DIR}/test-enc-require"
+mkdir -p "$STORAGE_4A"
+cat > "${WORK_DIR}/node-enc-require.conf" <<CONF
+NETWORK=testnet
+NODE_ROLE=full-api
+CORE_VERSION=0.1.3-alpha
+BIND_IP=0.0.0.0
+HTTP_PORT=8888
+P2P_PORT=9876
+SHIP_PORT=8080
+CONTAINER_NAME=core-testnet-enc-require
+AGENT_NAME=core-testnet-enc-require
+RESTART_POLICY=unless-stopped
+CHAIN_STATE_DB_SIZE=16384
+CHAIN_THREADS=2
+HTTP_THREADS=2
+NET_THREADS=2
+MAX_CLIENTS=50
+MAX_TRANSACTION_TIME=1000
+LOG_PROFILE=production
+STATE_IN_MEMORY=false
+STORAGE_PATH=${STORAGE_4A}
+API_GATEWAY_ENABLED=false
+FIREWALL_ENABLED=false
+WEBHOOK_ENABLED=false
+PROMETHEUS_ENABLED=false
+S3_ENABLED=false
+SNAPSHOT_INTERVAL=86400
+SNAPSHOT_RETENTION=7
+ENABLE_ENCRYPTION=true
+REQUIRE_ENCRYPTION=true
+CONF
+
+"${PROJECT_DIR}/scripts/setup/generate-config.sh" "${WORK_DIR}/node-enc-require.conf"
+CONFIG_4A="${STORAGE_4A}/config/config.ini"
+
+if grep -q '^p2p-enable-encryption = true' "$CONFIG_4A"; then
+    pass "enc-require: p2p-enable-encryption = true"
+else
+    fail "enc-require: p2p-enable-encryption = true missing"
+fi
+
+if grep -q '^p2p-require-encryption = true' "$CONFIG_4A"; then
+    pass "enc-require: p2p-require-encryption = true"
+else
+    fail "enc-require: p2p-require-encryption = true missing"
+fi
+
+# 4b.2 — explicit ENABLE_ENCRYPTION=false emits the false line
+# (so an operator choosing plaintext is recorded explicitly in config.ini,
+#  not left to the core_netd built-in default which could change.)
+STORAGE_4B="${WORK_DIR}/test-enc-off"
+mkdir -p "$STORAGE_4B"
+cat > "${WORK_DIR}/node-enc-off.conf" <<CONF
+NETWORK=testnet
+NODE_ROLE=full-api
+CORE_VERSION=0.1.3-alpha
+BIND_IP=0.0.0.0
+HTTP_PORT=8888
+P2P_PORT=9876
+SHIP_PORT=8080
+CONTAINER_NAME=core-testnet-enc-off
+AGENT_NAME=core-testnet-enc-off
+RESTART_POLICY=unless-stopped
+CHAIN_STATE_DB_SIZE=16384
+CHAIN_THREADS=2
+HTTP_THREADS=2
+NET_THREADS=2
+MAX_CLIENTS=50
+MAX_TRANSACTION_TIME=1000
+LOG_PROFILE=production
+STATE_IN_MEMORY=false
+STORAGE_PATH=${STORAGE_4B}
+API_GATEWAY_ENABLED=false
+FIREWALL_ENABLED=false
+WEBHOOK_ENABLED=false
+PROMETHEUS_ENABLED=false
+S3_ENABLED=false
+SNAPSHOT_INTERVAL=86400
+SNAPSHOT_RETENTION=7
+ENABLE_ENCRYPTION=false
+CONF
+
+"${PROJECT_DIR}/scripts/setup/generate-config.sh" "${WORK_DIR}/node-enc-off.conf"
+CONFIG_4B="${STORAGE_4B}/config/config.ini"
+
+if grep -q '^p2p-enable-encryption = false' "$CONFIG_4B"; then
+    pass "enc-off: p2p-enable-encryption = false emitted explicitly"
+else
+    fail "enc-off: p2p-enable-encryption = false missing"
+fi
+
+if grep -q '^p2p-require-encryption' "$CONFIG_4B"; then
+    fail "enc-off: p2p-require-encryption should not appear"
+else
+    pass "enc-off: p2p-require-encryption correctly absent"
 fi
 
 echo ""

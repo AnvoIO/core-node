@@ -105,6 +105,8 @@ CF_TUNNEL_TOKEN="$(get_config CF_TUNNEL_TOKEN "")"
 BLOCKS_LOG_STRIDE="$(get_config BLOCKS_LOG_STRIDE "")"
 MAX_RETAINED_BLOCK_FILES="$(get_config MAX_RETAINED_BLOCK_FILES "")"
 TRACE_API_MODE="$(get_config TRACE_API_MODE "raw")"
+ENABLE_ENCRYPTION="$(get_config ENABLE_ENCRYPTION "true")"
+REQUIRE_ENCRYPTION="$(get_config REQUIRE_ENCRYPTION "false")"
 
 # ---------------------------------------------------------------------------
 # Output directory setup
@@ -240,6 +242,12 @@ esac
 # --- Build RESOURCE_LIMITS block ---
 RESOURCE_BLOCK="http-max-response-time-ms = 12500"
 
+# --- Build ENCRYPTION_CONFIG block ---
+ENCRYPTION_BLOCK="p2p-enable-encryption = ${ENABLE_ENCRYPTION}"
+if [[ "$REQUIRE_ENCRYPTION" == "true" ]]; then
+    ENCRYPTION_BLOCK+=$'\n'"p2p-require-encryption = true"
+fi
+
 # --- Perform substitutions ---
 # Single-line placeholder replacements with sed
 CONFIG_CONTENT="$CONFIG_TEMPLATE"
@@ -280,6 +288,7 @@ CONFIG_CONTENT="$(replace_placeholder "{{PRODUCER_CONFIG}}" "$PRODUCER_BLOCK" "$
 CONFIG_CONTENT="$(replace_placeholder "{{BLOCKS_CONFIG}}" "$BLOCKS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{ACCESS_CONTROL}}" "$ACCESS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{RESOURCE_LIMITS}}" "$RESOURCE_BLOCK" "$CONFIG_CONTENT")"
+CONFIG_CONTENT="$(replace_placeholder "{{ENCRYPTION_CONFIG}}" "$ENCRYPTION_BLOCK" "$CONFIG_CONTENT")"
 
 # Handle enable-account-queries: true for API roles, remove for seed/producer
 case "$NODE_ROLE" in
