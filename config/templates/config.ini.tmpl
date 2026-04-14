@@ -10,7 +10,10 @@
 # HTTP and P2P Configuration
 # ==============================================================================
 http-server-address = {{BIND_IP}}:{{HTTP_PORT}}
-p2p-listen-endpoint = {{BIND_IP}}:{{P2P_PORT}}
+# p2p-listen-endpoint may appear multiple times — one TCP listener per line.
+# The generator emits an IPv4 entry for BIND_IP and an optional IPv6 entry
+# (bracketed) when P2P_BIND_IP_V6 is set in node.conf.
+{{P2P_LISTEN}}
 
 # ==============================================================================
 # Plugin Configuration
