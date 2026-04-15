@@ -79,6 +79,12 @@ BIND_IP="$(get_config BIND_IP)"
 # P2P_PORT. core_netd's net_plugin supports multiple p2p-listen-endpoint
 # entries natively — one TCP listener per entry. Leave empty for v4-only.
 P2P_BIND_IP_V6="$(get_config P2P_BIND_IP_V6 "")"
+# Optional p2p-server-address — the address net_plugin advertises to
+# peers during handshake (so they know how to reach this node on
+# reconnect or via gossip). Normally a DNS name, e.g.
+# "p2p.libre.pdx.cryptobloks.io:9876". If unset, core_netd falls back
+# to advertising the listen endpoint.
+P2P_SERVER_ADDRESS="$(get_config P2P_SERVER_ADDRESS "")"
 HTTP_PORT="$(get_config HTTP_PORT "")"
 P2P_PORT="$(get_config P2P_PORT)"
 SHIP_PORT="$(get_config SHIP_PORT "")"
@@ -263,6 +269,13 @@ if [[ -n "$P2P_BIND_IP_V6" ]]; then
     P2P_LISTEN_BLOCK+=$'\n'"p2p-listen-endpoint = [${P2P_BIND_IP_V6}]:${P2P_PORT}"
 fi
 
+# --- Build P2P_SERVER_ADDRESS block ---
+if [[ -n "$P2P_SERVER_ADDRESS" ]]; then
+    P2P_SERVER_ADDRESS_BLOCK="p2p-server-address = ${P2P_SERVER_ADDRESS}"
+else
+    P2P_SERVER_ADDRESS_BLOCK="# p2p-server-address not set — net_plugin defaults to the listen endpoint"
+fi
+
 # --- Perform substitutions ---
 # Single-line placeholder replacements with sed
 CONFIG_CONTENT="$CONFIG_TEMPLATE"
@@ -298,6 +311,7 @@ replace_placeholder() {
 
 CONFIG_CONTENT="$(replace_placeholder "{{PLUGINS}}" "$PLUGINS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{P2P_LISTEN}}" "$P2P_LISTEN_BLOCK" "$CONFIG_CONTENT")"
+CONFIG_CONTENT="$(replace_placeholder "{{P2P_SERVER_ADDRESS}}" "$P2P_SERVER_ADDRESS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{STATE_HISTORY_CONFIG}}" "$STATE_HISTORY_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{PEERS}}" "$PEERS_BLOCK" "$CONFIG_CONTENT")"
 CONFIG_CONTENT="$(replace_placeholder "{{PRODUCER_CONFIG}}" "$PRODUCER_BLOCK" "$CONFIG_CONTENT")"
