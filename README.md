@@ -274,7 +274,7 @@ All settings live in `node.conf` as `KEY=value` pairs. The wizard sets all of th
 | Key | Description |
 |-----|-------------|
 | `PRODUCER_NAME` | Registered producer account name |
-| `SIGNATURE_PROVIDER` | `PUB_KEY=KEY:PRIV_KEY` format |
+| `SIGNATURE_PROVIDER` | `PUB_KEY=FILE:PATH` (recommended) or `PUB_KEY=KEY:PRIV_KEY` (deprecated) |
 
 ### Firewall
 

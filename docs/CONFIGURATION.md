@@ -68,7 +68,9 @@ Required when `NODE_ROLE=producer`:
 | Key | Description | Example |
 |-----|-------------|---------|
 | `PRODUCER_NAME` | Registered producer account | `cryptobloks` |
-| `SIGNATURE_PROVIDER` | `PUB_KEY=KEY:PRIV_KEY` | `EOS...=KEY:5K...` |
+| `SIGNATURE_PROVIDER` | `PUB_KEY=FILE:PATH` or `PUB_KEY=KEY:PRIV_KEY` | `EOS...=FILE:/data/core-mainnet/signing.key` |
+
+**`FILE:` is the recommended signature provider** (v0.1.2-alpha+). The key file must have owner-only permissions (0600 or 0400). `KEY:` still works but logs an error-level deprecation warning at startup — it exposes the private key in process arguments visible via `ps`, `/proc/PID/cmdline`, and shell history.
 
 ## Light API Settings
 
@@ -157,3 +159,11 @@ Typical setup: disable TLS on the gateway (Cloudflare terminates TLS) but keep A
 |-----|--------------------------|-------------|
 | `PROMETHEUS_ENABLED` | Always | `true` or `false` |
 | `PROMETHEUS_PORT` | Yes | Metrics endpoint port |
+
+## Advanced Chain Options
+
+These core_netd options are not exposed in `node.conf` — they use sensible defaults that work for all standard deployments. They can be passed as extra arguments in the compose command override if needed.
+
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `--force-all-checks` | `false` | Do not skip any validation checks while replaying blocks. Useful when replaying from an untrusted block log source. Overrides the v0.1.4-alpha deep-sync optimization — see [Troubleshooting: sync stall](troubleshooting/README.md#sync-stall-on-subjective-cpu). |
