@@ -56,6 +56,22 @@ curl -s http://localhost:9888/v1/net/connections | jq 'length'
 ./scripts/node/logs.sh -f | grep "replay"
 ```
 
+### Sync stall on subjective CPU
+
+**Symptom:** A node syncing from scratch stops advancing and the logs show a repeating cycle of `tx_cpu_usage_exceeded` errors followed by peer disconnection:
+
+```
+error controller.cpp: except: tx_cpu_usage_exceeded
+    billed CPU time (N us) is greater than the maximum billable CPU time for the transaction (M us)
+warn  net_plugin.cpp: block NNNN not accepted, closing connection max violations reached
+```
+
+**Cause:** During sync catch-up, per-account CPU validation runs against local wall-clock execution time. On hardware slower than the original producer — or during a VM OC tier-up interruption — local CPU for a historic transaction can exceed the account's per-transaction budget that was recorded at production time. The block is rejected, the peer is disconnected, and the reconnect replays the same failing block indefinitely.
+
+**v0.1.4-alpha fix:** Blocks that are deeply behind the network-finalized tip (more than 1000 blocks behind the highest peer-reported LIB) automatically skip subjective CPU checks, matching the semantics of on-disk block log replay. This fix requires no configuration — upgrade to v0.1.4-alpha and the stall is resolved.
+
+**If you are on an older version:** Set `--force-all-checks=false` (the default) and add the block's producer to `--trusted-producer=ACCOUNT`. Or use `--validation-mode=light`, which also skips these checks but additionally skips authorization checks.
+
 ### High memory usage
 
 If `STATE_IN_MEMORY=true`, the chain state DB lives in an anonymous mmap pinned by `mlock2()`. Expected usage is up to `CHAIN_STATE_DB_SIZE` MB. If it exceeds the configured size, the node will crash. Increase `CHAIN_STATE_DB_SIZE` in `node.conf` and regenerate. Ensure the host's `RLIMIT_MEMLOCK` (`ulimit -l`) covers the configured size — otherwise `mlock2()` fails at startup and the node will not come up.

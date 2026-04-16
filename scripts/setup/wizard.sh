@@ -1135,10 +1135,14 @@ section_producer() {
 
     echo ""
     echo "  The signature provider links your public key to the private key used"
-    echo "  for block signing.  Format:"
-    echo "    PUBLIC_KEY=KEY:PRIVATE_KEY"
+    echo "  for block signing.  Recommended format (FILE: provider):"
+    echo "    PUBLIC_KEY=FILE:/path/to/signing.key"
     echo ""
-    log_warn "Keep your private key secure. It will be stored in node.conf."
+    echo "  The key file must have owner-only permissions (chmod 0600)."
+    echo "  Legacy format PUBLIC_KEY=KEY:PRIVATE_KEY still works but is deprecated"
+    echo "  — it exposes the key in process arguments."
+    echo ""
+    log_warn "Keep your private key secure."
     echo ""
 
     local prev_sig
