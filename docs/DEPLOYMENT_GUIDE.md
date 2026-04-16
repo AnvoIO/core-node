@@ -17,7 +17,7 @@ The wizard walks through all configuration sections:
 
 1. **Network** — mainnet or testnet
 2. **Node role** — producer, seed, light-api, full-api, full-history
-3. **Core version** — queries GitHub for available releases, recommends 0.1.3-alpha
+3. **Core version** — queries GitHub for available releases, recommends 0.1.4-alpha
 4. **Container name** — Docker container name
 5. **Bind IP** — auto-detects network interfaces for selection
 6. **Ports** — HTTP, P2P, SHiP (role-dependent)

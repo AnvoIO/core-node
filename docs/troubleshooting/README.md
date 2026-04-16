@@ -26,7 +26,7 @@
 docker images | grep core-node
 
 # Rebuild if needed
-docker build -t "core-node:0.1.3-alpha" -f docker/Dockerfile docker/
+docker build -t "core-node:0.1.4-alpha" -f docker/Dockerfile docker/
 ```
 
 **Port conflict:**

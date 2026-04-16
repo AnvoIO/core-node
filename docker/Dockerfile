@@ -5,7 +5,7 @@
 FROM ubuntu:24.04
 
 # Build argument for Core version (AnvoIO/core release version)
-ARG CORE_VERSION=0.1.3-alpha
+ARG CORE_VERSION=0.1.4-alpha
 
 # TARGETARCH is injected by Docker buildx (amd64 or arm64)
 ARG TARGETARCH

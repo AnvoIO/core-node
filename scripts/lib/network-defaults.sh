@@ -37,7 +37,7 @@ _NETWORK_DEFAULTS_SH_LOADED="true"
 # ---------------------------------------------------------------------------
 # Recommended Core version (update when a new version is tested)
 # ---------------------------------------------------------------------------
-RECOMMENDED_CORE_VERSION="0.1.3-alpha"
+RECOMMENDED_CORE_VERSION="0.1.4-alpha"
 
 # ---------------------------------------------------------------------------
 # get_chain_id "network"
