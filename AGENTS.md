@@ -105,7 +105,7 @@ Most scripts locate node.conf via: explicit argument → $PWD/node.conf → $PRO
 
 | Network | Chain ID |
 |---------|----------|
-| Mainnet | `38b1d7815474d0bf271d659c50b579893768b3b2c3dc6a14c4be6a7b3e14f2fb` |
+| Mainnet | `38b1d7815474d0c60683ecbea321d723e83f5da6ae5f1c1f9fecc69d9ba96465` |
 | Testnet | `b64646740308df2ee06c6b72f34c0f7fa066d940e831f752db2006fcc2b78dee` |
 
 ## Known Constraints
