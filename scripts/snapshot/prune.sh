@@ -89,11 +89,14 @@ main() {
         return 0
     fi
 
-    # Build sorted list of snapshots (newest first by modification time)
+    # Build sorted list of snapshots (newest first by modification time).
+    # Match only timestamped snapshots (snapshot-*.bin) so latest.bin — the
+    # restore pointer maintained by start.sh / error-recovery.sh — is never
+    # pruned, and neither is any other non-snapshot .bin file.
     local snapshots=()
     while IFS= read -r f; do
         snapshots+=("$f")
-    done < <(ls -1t "${snapshots_dir}"/*.bin 2>/dev/null)
+    done < <(ls -1t "${snapshots_dir}"/snapshot-*.bin 2>/dev/null)
 
     local count=${#snapshots[@]}
 

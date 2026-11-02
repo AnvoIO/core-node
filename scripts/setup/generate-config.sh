@@ -118,6 +118,17 @@ MAX_RETAINED_BLOCK_FILES="$(get_config MAX_RETAINED_BLOCK_FILES "")"
 TRACE_API_MODE="$(get_config TRACE_API_MODE "raw")"
 ENABLE_ENCRYPTION="$(get_config ENABLE_ENCRYPTION "true")"
 REQUIRE_ENCRYPTION="$(get_config REQUIRE_ENCRYPTION "false")"
+# Resource monitor: percent-used at which core_netd's resource_monitor_plugin
+# initiates a graceful shutdown (valid range 6-99; core default 90). Set this
+# per node to stagger shutdowns across nodes that share one filesystem, so a
+# lower-value node trips first as an early warning instead of every node hitting
+# 90% together. Unset → omit the option and let core_netd use its default.
+RESOURCE_MONITOR_SPACE_THRESHOLD="$(get_config RESOURCE_MONITOR_SPACE_THRESHOLD "")"
+# Docker json-file log rotation. Without a cap, container logs grow unbounded —
+# a crash-looping node can fill the disk with log output alone. Defaults cap
+# each container at LOG_MAX_FILE rotated files of LOG_MAX_SIZE each.
+LOG_MAX_SIZE="$(get_config LOG_MAX_SIZE "100m")"
+LOG_MAX_FILE="$(get_config LOG_MAX_FILE "5")"
 
 # ---------------------------------------------------------------------------
 # Output directory setup
@@ -252,6 +263,14 @@ esac
 
 # --- Build RESOURCE_LIMITS block ---
 RESOURCE_BLOCK="http-max-response-time-ms = 12500"
+# Optional per-node resource-monitor shutdown threshold (percent used). When
+# set, core_netd gracefully shuts the node down once the monitored filesystem
+# exceeds this percentage. Staggering it across co-located nodes turns a
+# synchronized disk-full cliff into a staged early warning. Omitted → core
+# default (90). A warning is auto-logged at (threshold - 5).
+if [[ -n "$RESOURCE_MONITOR_SPACE_THRESHOLD" ]]; then
+    RESOURCE_BLOCK+=$'\n'"resource-monitor-space-threshold = ${RESOURCE_MONITOR_SPACE_THRESHOLD}"
+fi
 
 # --- Build ENCRYPTION_CONFIG block ---
 ENCRYPTION_BLOCK="p2p-enable-encryption = ${ENABLE_ENCRYPTION}"
@@ -399,6 +418,16 @@ if [[ "$STATE_IN_MEMORY" == "true" ]]; then
     ENVIRONMENT_BLOCK+=$'\n'"      - STATE_IN_MEMORY=true"
 fi
 
+# Build LOGGING block — json-file rotation so container logs cannot grow
+# unbounded and fill the disk (the failure mode behind the resource-monitor
+# shutdown loop). Note: this takes effect when the container is (re)created;
+# `docker restart` alone keeps writing to the existing log file.
+LOGGING_BLOCK="    logging:
+      driver: json-file
+      options:
+        max-size: \"${LOG_MAX_SIZE}\"
+        max-file: \"${LOG_MAX_FILE}\""
+
 # Build GATEWAY_SERVICE (OpenResty + optional Cloudflare Tunnel)
 GATEWAY_BLOCK=""
 if [[ "$API_GATEWAY_ENABLED" == "true" ]]; then
@@ -459,6 +488,7 @@ COMPOSE_CONTENT="$(replace_placeholder "{{EXTRA_VOLUMES}}" "" "$COMPOSE_CONTENT"
 COMPOSE_CONTENT="$(replace_placeholder "{{ULIMITS}}" "$ULIMITS_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{HEALTHCHECK}}" "$HEALTHCHECK_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{ENVIRONMENT}}" "$ENVIRONMENT_BLOCK" "$COMPOSE_CONTENT")"
+COMPOSE_CONTENT="$(replace_placeholder "{{LOGGING}}" "$LOGGING_BLOCK" "$COMPOSE_CONTENT")"
 COMPOSE_CONTENT="$(replace_placeholder "{{GATEWAY_SERVICE}}" "$GATEWAY_BLOCK" "$COMPOSE_CONTENT")"
 
 write_file "${CONFIG_OUTPUT_DIR}/docker-compose.yml" "$COMPOSE_CONTENT"
