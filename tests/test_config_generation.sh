@@ -523,6 +523,93 @@ fi
 echo ""
 
 # =============================================================================
+# Test Suite 5: Regenerating over an existing config warns and backs up
+# =============================================================================
+echo "--- Test Suite 5: regenerate change warnings ---"
+
+STORAGE_5="${WORK_DIR}/test-regen"
+mkdir -p "$STORAGE_5"
+cat > "${WORK_DIR}/node-regen.conf" <<CONF
+NETWORK=testnet
+NODE_ROLE=full-history
+CORE_VERSION=0.1.4-alpha
+BIND_IP=10.0.0.1
+HTTP_PORT=8888
+P2P_PORT=9876
+SHIP_PORT=8080
+CONTAINER_NAME=core-regen-test
+AGENT_NAME=core-regen-test
+RESTART_POLICY=unless-stopped
+CHAIN_STATE_DB_SIZE=16384
+CHAIN_THREADS=2
+HTTP_THREADS=2
+NET_THREADS=2
+MAX_CLIENTS=50
+MAX_TRANSACTION_TIME=30
+LOG_PROFILE=standard
+STATE_IN_MEMORY=false
+STORAGE_PATH=${STORAGE_5}
+PEERS=a.example:9876,b.example:9876
+API_GATEWAY_ENABLED=false
+CONF
+
+regen() { "${PROJECT_DIR}/scripts/setup/generate-config.sh" "$@" 2>&1 | sed 's/\x1b\[[0-9;]*m//g'; }
+
+regen "${WORK_DIR}/node-regen.conf" >/dev/null
+OUT="$(regen "${WORK_DIR}/node-regen.conf")"
+if compgen -G "${STORAGE_5}/config/backup-*" >/dev/null; then
+    fail "Identical regenerate created a backup directory"
+else
+    pass "Identical regenerate creates no backup"
+fi
+if grep -q "need review" <<< "$OUT"; then
+    fail "Identical regenerate printed change warnings"
+else
+    pass "Identical regenerate prints no change warnings"
+fi
+
+# Simulate a node.conf that drifted from the running config.
+sed -i 's/^STATE_IN_MEMORY=false/STATE_IN_MEMORY=true/; s/^PEERS=.*/PEERS=a.example:9876/' "${WORK_DIR}/node-regen.conf"
+
+OUT="$(regen "${WORK_DIR}/node-regen.conf" --dry-run)"
+if grep -q "database-map-mode changes: mapped -> locked" <<< "$OUT"; then
+    pass "Dry run warns about map-mode change"
+else
+    fail "Dry run did not warn about map-mode change"
+fi
+if grep -q "p2p-peer-address entries would be removed (1).*b.example:9876" <<< "$OUT"; then
+    pass "Dry run warns about removed peer"
+else
+    fail "Dry run did not warn about removed peer"
+fi
+if compgen -G "${STORAGE_5}/config/backup-*" >/dev/null; then
+    fail "Dry run created a backup directory"
+else
+    pass "Dry run writes no backup"
+fi
+
+OUT="$(regen "${WORK_DIR}/node-regen.conf")"
+BACKUP_5="$(compgen -G "${STORAGE_5}/config/backup-*" | head -1 || true)"
+if [[ -n "$BACKUP_5" && -f "${BACKUP_5}/config.ini" && -f "${BACKUP_5}/docker-compose.yml" ]]; then
+    pass "Changed files backed up to $(basename "$BACKUP_5")"
+else
+    fail "Changed files were not backed up"
+fi
+if [[ -n "$BACKUP_5" ]] && grep -q "b.example:9876" "${BACKUP_5}/config.ini" \
+        && ! grep -q "database-map-mode locked" "${BACKUP_5}/docker-compose.yml"; then
+    pass "Backup holds the previous config"
+else
+    fail "Backup does not hold the previous config"
+fi
+if grep -q "database-map-mode changes" <<< "$OUT"; then
+    pass "Real regenerate also warns"
+else
+    fail "Real regenerate did not warn"
+fi
+
+echo ""
+
+# =============================================================================
 # Summary
 # =============================================================================
 echo "========================================="

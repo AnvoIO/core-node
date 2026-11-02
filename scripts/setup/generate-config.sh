@@ -13,6 +13,11 @@
 #
 # Usage:
 #   generate-config.sh /path/to/node.conf [--dry-run]
+#
+# When regenerating over an existing deployment, files whose content changes
+# are first copied to config/backup-<UTC timestamp>/, and a summary warns about
+# a changed database-map-mode or removed p2p-peer-address entries (both shown
+# by --dry-run too). Review those before restarting the node.
 # =============================================================================
 
 set -euo pipefail
@@ -153,9 +158,69 @@ fi
 # ---------------------------------------------------------------------------
 # Helper: write or preview a file
 # ---------------------------------------------------------------------------
+# Regenerating over an existing deployment can silently undo hand edits or a
+# node.conf that has drifted from what is running (e.g. STATE_IN_MEMORY=true
+# left behind after a node was switched to mapped mode, or peers added only to
+# config.ini). Before a file changes, back up the old copy and warn about the
+# changes that matter most at runtime.
+BACKUP_DIR="${CONFIG_OUTPUT_DIR}/backup-$(date -u +%Y%m%dT%H%M%SZ)"
+CHANGE_WARNINGS=()
+
+# map_mode_of "compose content" — chainbase map mode the compose file runs with
+map_mode_of() {
+    local mode
+    mode="$(grep -oE -- '--database-map-mode [a-z_]+' <<< "$1" | awk '{print $2}' | tail -1 || true)"
+    echo "${mode:-mapped}"
+}
+
+# peers_of "config.ini content" — one p2p-peer-address per line, sorted
+peers_of() {
+    grep -E '^[[:space:]]*p2p-peer-address[[:space:]]*=' <<< "$1" | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]]+$//' | sort -u || true
+}
+
+# without_stamp — drop "# Generated ..." timestamp lines so reruns compare equal
+without_stamp() { grep -v '^# Generated' || true; }
+
+check_changes() {
+    local dest="$1"
+    local content="$2"
+    local old
+    old="$(cat "$dest")"
+
+    case "$(basename "$dest")" in
+        docker-compose.yml)
+            local old_mode new_mode
+            old_mode="$(map_mode_of "$old")"
+            new_mode="$(map_mode_of "$content")"
+            if [[ "$old_mode" != "$new_mode" ]]; then
+                CHANGE_WARNINGS+=("database-map-mode changes: ${old_mode} -> ${new_mode} (check STATE_IN_MEMORY in node.conf; locked mode pins CHAIN_STATE_DB_SIZE of RAM)")
+            fi
+            ;;
+        config.ini)
+            local removed added
+            removed="$(comm -23 <(peers_of "$old") <(peers_of "$content"))"
+            added="$(comm -13 <(peers_of "$old") <(peers_of "$content"))"
+            if [[ -n "$removed" ]]; then
+                CHANGE_WARNINGS+=("p2p-peer-address entries would be removed ($(grep -c . <<< "$removed")); add them to PEERS in node.conf to keep them: $(paste -sd, - <<< "$removed")")
+            fi
+            if [[ -n "$added" ]]; then
+                log_info "config.ini: adding $(grep -c . <<< "$added") peer(s): $(paste -sd, - <<< "$added")"
+            fi
+            ;;
+    esac
+}
+
 write_file() {
     local dest="$1"
     local content="$2"
+
+    if [[ -f "$dest" ]] && [[ "$(without_stamp < "$dest")" != "$(without_stamp <<< "$content")" ]]; then
+        check_changes "$dest" "$content"
+        if [[ "$DRY_RUN" != "true" ]]; then
+            mkdir -p "$BACKUP_DIR"
+            cp -p "$dest" "${BACKUP_DIR}/"
+        fi
+    fi
 
     if [[ "$DRY_RUN" == "true" ]]; then
         echo ""
@@ -612,6 +677,11 @@ fi
 # =============================================================================
 # Copy node.conf for reference
 # =============================================================================
+# node.conf is copied, not written via write_file, so back it up here too.
+if [[ "$DRY_RUN" != "true" && -f "${CONFIG_OUTPUT_DIR}/node.conf" && -d "$BACKUP_DIR" ]] \
+        && ! cmp -s "$CONF_FILE" "${CONFIG_OUTPUT_DIR}/node.conf"; then
+    cp -p "${CONFIG_OUTPUT_DIR}/node.conf" "${BACKUP_DIR}/"
+fi
 if [[ "$DRY_RUN" == "true" ]]; then
     log_info "Would copy ${CONF_FILE} -> ${CONFIG_OUTPUT_DIR}/node.conf"
 else
@@ -644,4 +714,17 @@ else
         log_info "  ${CONFIG_OUTPUT_DIR}/api_keys"
     fi
     log_info "  ${CONFIG_OUTPUT_DIR}/node.conf"
+fi
+
+if [[ "$DRY_RUN" != "true" && -d "$BACKUP_DIR" ]]; then
+    echo ""
+    log_info "Previous versions of changed files saved to ${BACKUP_DIR}"
+fi
+
+if [[ ${#CHANGE_WARNINGS[@]} -gt 0 ]]; then
+    echo ""
+    log_warn "Changes versus the existing configuration need review before (re)starting the node:"
+    for w in "${CHANGE_WARNINGS[@]}"; do
+        log_warn "  - ${w}"
+    done
 fi
