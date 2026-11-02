@@ -52,6 +52,7 @@ Sizing comes from `CHAIN_STATE_DB_SIZE` — no separate tmpfs size. The host's `
 |-----|----------|-------------|---------|
 | `SNAPSHOT_INTERVAL` | Yes | Blocks between chain snapshots | `1000` |
 | `SNAPSHOT_RETENTION` | Yes | Number of local snapshots to keep | `5` |
+| `SNAPSHOT_PULL_MIN_MB` | No | Minimum size (MiB) a public snapshot must have before `pull-public.sh` installs it as `latest.bin` (default: `5`) | `100` |
 | `CUSTOM_SNAPSHOT_URL` | No | URL for snapshot restore fallback (used by `restore.sh` auto-detect) | |
 
 ## Operational Settings

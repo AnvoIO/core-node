@@ -61,7 +61,7 @@ All scripts source from `scripts/lib/`:
 scripts/
 ├── setup/          # wizard.sh, generate-config.sh, validate-config.sh, manage-keys.sh
 ├── node/           # start.sh, stop.sh, restart.sh, status.sh, logs.sh
-├── snapshot/       # create.sh, restore.sh, prune.sh, schedule.sh
+├── snapshot/       # create.sh, restore.sh, prune.sh, schedule.sh, install-prune-cron.sh, pull-public.sh, install-pull-cron.sh
 ├── backup/         # full-backup.sh, s3-push.sh, s3-pull.sh, s3-list.sh, s3-prune.sh
 ├── monitoring/     # health-check.sh, metrics.sh
 ├── maintenance/    # error-recovery.sh, reset.sh
