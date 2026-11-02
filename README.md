@@ -113,6 +113,9 @@ core-node/
 │   │   ├── create.sh             # Create chain snapshot via producer API
 │   │   ├── restore.sh            # Multi-source restore (local/S3/URL/providers)
 │   │   ├── prune.sh              # Retention-based cleanup with --dry-run
+│   │   ├── install-prune-cron.sh # cron.d job running prune.sh
+│   │   ├── pull-public.sh        # Refresh latest.bin from public providers
+│   │   ├── install-pull-cron.sh  # cron.d job running pull-public.sh
 │   │   └── schedule.sh           # Schedule/list/cancel via producer API
 │   ├── backup/
 │   │   ├── full-backup.sh        # BTRFS snapshot + S3 upload orchestration
@@ -163,6 +166,9 @@ core-node/
 | `scripts/snapshot/restore.sh` | Restore from local, S3, URL, or public providers |
 | `scripts/snapshot/prune.sh` | Prune old snapshots by retention count (`--dry-run` supported) |
 | `scripts/snapshot/schedule.sh` | Schedule/list/cancel periodic snapshots via producer API |
+| `scripts/snapshot/install-prune-cron.sh` | Install a cron.d job that runs `prune.sh` for a node (`--schedule`, `--uninstall`, `--dry-run`) |
+| `scripts/snapshot/pull-public.sh` | Refresh `snapshots/latest.bin` from `config/snapshot-providers.conf` (validates header, size and chain ID; skips unchanged ETag) |
+| `scripts/snapshot/install-pull-cron.sh` | Install a cron.d job that runs `pull-public.sh` every 3h (`--schedule`, `--uninstall`, `--dry-run`) |
 
 ### S3 Backup
 
@@ -333,6 +339,15 @@ GenerEOS|mainnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/libre/lat
 GenerEOS|testnet|https://s3.us-east-1.amazonaws.com/genereos-snapshots/libre-testnet/latest.bin.zst
 EOSUSA|mainnet|http://snapshots.eosusa.io/snapshots/libre/latest.zst
 ```
+
+Nodes that never create their own snapshots (full-history / SHiP nodes without `producer_api`) should keep `latest.bin` fresh from these providers. After an unclean stop the entrypoint restores from it, so a stale one means replaying everything since it was taken:
+
+```bash
+sudo ./scripts/snapshot/install-pull-cron.sh /path/to/node.conf      # every 3h; log: ${STORAGE_PATH}/logs/snapshot-pull.log
+sudo ./scripts/snapshot/pull-public.sh /path/to/node.conf --dry-run  # one-off check
+```
+
+`pull-public.sh` uses https providers only unless `--allow-http` is given, and never replaces `latest.bin` with a snapshot that fails validation.
 
 ## Troubleshooting
 
